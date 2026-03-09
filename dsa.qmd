@@ -1,0 +1,4148 @@
+---
+title: "Python Data Structures & Algorithms"
+subtitle: "A Complete Visual Guide"
+author: "DSA with Python"
+date: today
+format:
+  revealjs:
+    theme: [dark, custom.scss]
+    highlight-style: monokai
+    filters:
+      - code-fullscreen
+    transition: slide
+    slide-number: true
+    chalkboard: false
+    footer: "Python DSA — Complete Guide"
+    progress: true
+    code-fold: false
+    code-line-numbers: true
+    code-overflow: wrap
+    incremental: false
+    width: 1280
+    height: 720
+    margin: 0.05
+    center: false
+  pptx:
+    mermaid-format: png
+mermaid:
+  theme: dark
+
+execute:
+  echo: false
+  eval: true
+---
+
+## What is DSA? {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+
+::: {.column width="55%"}
+**Data Structures** are ways to **organise and store data** so it can be accessed and modified efficiently.
+
+**Algorithms** are step-by-step **procedures** to solve problems using that data.
+
+<br>
+
+::: {.fragment}
+Together they answer two questions:
+
+- **How** should data be stored?
+- **How** should data be processed?
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+Mastering DSA is the foundation for writing **efficient, scalable software** and **acing technical interviews**.
+:::
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    DSA["🧠 DSA"] --> DS["📦 Data Structures"]
+    DSA --> AL["⚙️ Algorithms"]
+    DS --> Linear["Linear<br/>Array · List · Stack · Queue"]
+    DS --> NonLinear["Non-Linear<br/>Tree · Graph · Heap"]
+    DS --> Hashed["Hashed<br/>Hash Table · Set"]
+    AL --> Search["Searching<br/>Linear · Binary"]
+    AL --> Sort["Sorting<br/>Merge · Quick · Heap"]
+    AL --> Graph["Graph<br/>BFS · DFS · Dijkstra"]
+    AL --> DP["Optimisation<br/>DP · Greedy"]
+    classDef root  fill:#e94560,stroke:none,color:#fff
+    classDef cat   fill:#0f3460,stroke:#e94560,color:#fff
+    classDef leaf  fill:#16213e,stroke:#555,color:#ccc
+    class DSA root
+    class DS,AL cat
+    class Linear,NonLinear,Hashed,Search,Sort,Graph,DP leaf
+```
+:::
+:::
+:::
+
+---
+
+## Why DSA Matters {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.fragment}
+### Performance Gap
+
+| Input Size | O(n²) ops | O(n log n) ops |
+|---|---|---|
+| 100 | 10,000 | 665 |
+| 1,000 | 1,000,000 | 9,966 |
+| 1,000,000 | 10¹² | ~20,000,000 |
+:::
+
+::: {.fragment}
+A naive O(n²) sort on **1 million items** at 10⁹ ops/sec takes **~17 minutes**.  
+An O(n log n) sort takes **~0.02 seconds**.
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Real-world Impact
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    G["Google Search"] --> BFS["BFS / PageRank"]
+    G2["Google Maps"] --> DJ["Dijkstra's Algorithm"]
+    FB["Social Networks"] --> GR["Graph Traversal"]
+    DB["Databases"] --> BT["B-trees & Hash Tables"]
+    AI["AI / ML"] --> DP["Dynamic Programming"]
+    classDef app  fill:#e94560,stroke:none,color:#fff
+    classDef algo fill:#0f3460,stroke:#e94560,color:#fff
+    class G,G2,FB,DB,AI app
+    class BFS,DJ,GR,BT,DP algo
+```
+:::
+:::
+:::
+
+---
+
+## Big-O Notation {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Big-O** describes how runtime or memory **scales** as input size *n* grows — it gives a **worst-case upper bound**.
+
+<br>
+
+::: {.fragment}
+| Notation | Name | Example |
+|---|---|---|
+| O(1) | Constant | Array index access |
+| O(log n) | Logarithmic | Binary search |
+| O(n) | Linear | Linear search |
+| O(n log n) | Linearithmic | Merge sort |
+| O(n²) | Quadratic | Bubble sort |
+| O(2ⁿ) | Exponential | Fib (naive) |
+| O(n!) | Factorial | Permutations |
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    O1["O(1) ✅ Excellent"]
+    OLN["O(log n) ✅ Good"]
+    ON["O(n) 🟡 Fair"]
+    ONLN["O(n log n) 🟡 Fair"]
+    ON2["O(n²) 🔴 Bad"]
+    O2N["O(2ⁿ) 💀 Horrible"]
+    O1 --> OLN --> ON --> ONLN --> ON2 --> O2N
+    classDef good  fill:#1a6b3c,stroke:none,color:#fff
+    classDef ok    fill:#7a6000,stroke:none,color:#fff
+    classDef bad   fill:#7a1a1a,stroke:none,color:#fff
+    class O1,OLN good
+    class ON,ONLN ok
+    class ON2,O2N bad
+```
+:::
+
+::: {.fragment}
+::: {.callout-note}
+Drop constants and lower-order terms: **O(3n² + 2n + 5) → O(n²)**
+:::
+:::
+:::
+:::
+
+---
+
+## Data Structures Roadmap {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 60, 'nodeSpacing': 40}}}%%
+graph LR
+    subgraph Linear["⬜ Linear"]
+        ARR["Array / List"]
+        LL["Linked List"]
+        ST["Stack"]
+        QU["Queue"]
+        DQ["Deque"]
+    end
+    subgraph Hashed["🔷 Hashed"]
+        HT["Hash Table<br/>(dict)"]
+        HS["Hash Set<br/>(set)"]
+    end
+    subgraph Trees["🌲 Trees"]
+        BT["Binary Tree"]
+        BST["BST"]
+        HP["Heap"]
+        TR["Trie"]
+    end
+    subgraph Graphs["🕸 Graphs"]
+        DG["Directed"]
+        UG["Undirected"]
+        WG["Weighted"]
+    end
+    classDef lin  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef hash fill:#16213e,stroke:#4ecca3,color:#fff
+    classDef tree fill:#1a1a2e,stroke:#f5a623,color:#fff
+    classDef grph fill:#0d0d1a,stroke:#a29bfe,color:#fff
+    class ARR,LL,ST,QU,DQ lin
+    class HT,HS hash
+    class BT,BST,HP,TR tree
+    class DG,UG,WG grph
+```
+
+::: {.fragment}
+> **Choosing a data structure** is the first — and most important — design decision.
+:::
+
+---
+
+## Arrays — Memory Layout {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="60%"}
+An **array** stores elements in **contiguous memory** — all elements are back-to-back, enabling **O(1) random access**.
+
+<!-- $$address(i) = base + i \times element\_size$$ -->
+
+$$address(i) = base + i \times element\_size$$
+
+
+::: {.fragment}
+### Python `list` — Dynamic Array
+
+```python
+nums = [10, 20, 30, 40, 50]
+print(nums[2])      # O(1) → 30
+nums.append(60)     # O(1) amortised
+nums.insert(0, 5)   # O(n) — shifts all
+nums.pop()          # O(1)
+nums.pop(0)         # O(n) — shifts all
+```
+:::
+:::
+
+::: {.column width="40%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "RAM — contiguous blocks"
+        direction LR
+        A0["[0]<br/>10"] --- A1["[1]<br/>20"] --- A2["[2]<br/>30"] --- A3["[3]<br/>40"] --- A4["[4]<br/>50"]
+    end
+    P0(["base"]) -.-> A0
+    P2(["base+8"]) -.-> A2
+    classDef cell fill:#0f3460,stroke:#e94560,color:#fff
+    classDef ptr  fill:#e94560,stroke:none,color:#fff
+    class A0,A1,A2,A3,A4 cell
+    class P0,P2 ptr
+```
+:::
+
+::: {.fragment}
+### Complexity
+
+| Operation | Time |
+|---|---|
+| Access by index | O(1) |
+| Search (unsorted) | O(n) |
+| Insert at end | O(1)* |
+| Insert at front | O(n) |
+| Delete at end | O(1) |
+| Delete at front | O(n) |
+:::
+:::
+:::
+
+---
+
+## Linked Lists — Structure {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **linked list** stores nodes in **non-contiguous** memory. Each node holds **data** and a **pointer** to the next node.
+
+::: {.fragment}
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None   # pointer
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    def prepend(self, data):        # O(1)
+        node = Node(data)
+        node.next = self.head
+        self.head = node
+
+    def append(self, data):         # O(n)
+        node = Node(data)
+        if not self.head:
+            self.head = node; return
+        curr = self.head
+        while curr.next:
+            curr = curr.next
+        curr.next = node
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    HEAD(["HEAD"]) --> N1
+    N1["10 | ●"] --> N2["20 | ●"] --> N3["30 | ∅"]
+    N3 --> NIL(["None"])
+    classDef h   fill:#e94560,stroke:none,color:#fff
+    classDef n   fill:#0f3460,stroke:#e94560,color:#fff
+    classDef nil fill:#333,stroke:none,color:#aaa
+    class HEAD h
+    class N1,N2,N3 n
+    class NIL nil
+```
+:::
+
+::: {.fragment}
+### Complexity
+
+| Operation | Time |
+|---|---|
+| Prepend | O(1) |
+| Append | O(n) |
+| Search | O(n) |
+| Delete head | O(1) |
+| Delete node | O(n) |
+| Access by index | O(n) |
+:::
+:::
+:::
+
+---
+
+## Arrays vs Linked Lists {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    Q["Need fast random access?"]
+    Q --> |Yes| ARR["Use Array / List<br/>O(1) index access"]
+    Q --> |No| Q2["Frequent front insertions/<br/>deletions?"]
+    Q2 --> |Yes| LL["Use Linked List<br/>O(1) prepend"]
+    Q2 --> |No| Q3["Need LIFO or FIFO<br/>behaviour?"]
+    Q3 --> |LIFO| ST["Use Stack<br/>(list / deque)"]
+    Q3 --> |FIFO| QU["Use Queue<br/>(collections.deque)"]
+    Q3 --> |No| ARR2["Use Array by default"]
+    classDef q   fill:#e94560,stroke:none,color:#fff
+    classDef ans fill:#0f3460,stroke:#e94560,color:#fff
+    class Q,Q2,Q3 q
+    class ARR,ARR2,LL,ST,QU ans
+```
+:::
+
+::: {.column width="45%"}
+| Feature | Array | Linked List |
+|---|---|---|
+| Memory | Contiguous | Scattered |
+| Access | O(1) | O(n) |
+| Prepend | O(n) | **O(1)** |
+| Append | O(1)* | O(n) |
+| Delete head | O(n) | **O(1)** |
+| Cache perf. | Excellent | Poor |
+| Extra memory | None | 1–2 pointers |
+
+::: {.fragment}
+::: {.callout-tip}
+Python's built-in `collections.deque` gives **O(1) append and prepend** — best of both worlds for queue/stack use cases.
+:::
+:::
+:::
+:::
+
+---
+
+## Stacks — LIFO {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **stack** is a **Last In, First Out (LIFO)** structure — the last element pushed is the first popped.
+
+::: {.fragment}
+```python
+# Python list as a stack
+stack = []
+stack.append(10)    # push  → [10]
+stack.append(20)    # push  → [10, 20]
+stack.append(30)    # push  → [10, 20, 30]
+
+top = stack[-1]     # peek  → 30  (O(1))
+stack.pop()         # pop   → 30  (O(1))
+print(stack)        # [10, 20]
+```
+:::
+
+::: {.fragment}
+### Use Cases
+- Function **call stack** (recursion)
+- **Undo / Redo** in editors
+- **Bracket matching** (valid parentheses)
+- **Expression evaluation** (postfix/infix)
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TB
+    subgraph "Stack"
+        direction TB
+        TOP(["▶ TOP"]) --> S3["30  ← last pushed"]
+        S3 --> S2["20"]
+        S2 --> S1["10  ← first pushed"]
+        S1 --> BOT(["⊥ BOTTOM"])
+    end
+    PUSH(["push(40)"]) -.->|insert here| S3
+    POP(["pop() → 30"]) -.->|remove here| S3
+    classDef top  fill:#e94560,stroke:none,color:#fff
+    classDef cell fill:#0f3460,stroke:#e94560,color:#fff
+    classDef act  fill:#1a6b3c,stroke:none,color:#fff
+    class TOP,BOT top
+    class S1,S2,S3 cell
+    class PUSH,POP act
+```
+:::
+
+::: {.fragment}
+| Operation | Time |
+|---|---|
+| push | O(1) |
+| pop | O(1) |
+| peek | O(1) |
+| search | O(n) |
+:::
+:::
+:::
+
+---
+
+## Stack — Bracket Matching {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+A classic stack application — verify every opening bracket has a matching closing bracket.
+
+::: {.fragment}
+```{.python code-line-numbers="1-4|6-13|15-17"}
+def is_valid(s: str) -> bool:
+    stack = []
+    pairs = {')': '(', ']': '[', '}': '{'}
+
+    for ch in s:
+        if ch in '([{':
+            stack.append(ch)          # push opening
+        elif ch in ')]}':
+            if not stack or stack[-1] != pairs[ch]:
+                return False          # mismatch
+            stack.pop()               # matched — pop
+
+    return len(stack) == 0            # empty ⇒ valid
+
+print(is_valid("({[]})"))  # True
+print(is_valid("({[})"))   # False
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant Input
+    participant Stack
+    Input->>Stack: push '('
+    Input->>Stack: push '{'
+    Input->>Stack: push '['
+    Input->>Stack: pop '[' ← match ']'
+    Input->>Stack: pop '{' ← match '}'
+    Input->>Stack: pop '(' ← match ')'
+    Note over Stack: Empty → Valid ✅
+```
+:::
+:::
+:::
+
+---
+
+## Queues — FIFO {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **queue** is a **First In, First Out (FIFO)** structure — the first element added is the first removed.
+
+::: {.fragment}
+```python
+from collections import deque
+
+q = deque()
+q.append(10)        # enqueue  → deque([10])
+q.append(20)        # enqueue  → deque([10, 20])
+q.append(30)        # enqueue  → deque([10, 20, 30])
+
+front = q[0]        # peek     → 10  (O(1))
+q.popleft()         # dequeue  → 10  (O(1))
+print(q)            # deque([20, 30])
+```
+:::
+
+::: {.fragment}
+### Use Cases
+- **BFS** (breadth-first search)
+- **Task scheduling** (OS process queues)
+- **Print spooling**
+- **Web server** request handling
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    EN(["enqueue ➡"]) -->|rear| Q1["10"]
+    Q1 --> Q2["20"]
+    Q2 --> Q3["30"]
+    Q3 -->|front| DE(["➡ dequeue"])
+    classDef end_ fill:#e94560,stroke:none,color:#fff
+    classDef cell fill:#0f3460,stroke:#e94560,color:#fff
+    class EN,DE end_
+    class Q1,Q2,Q3 cell
+```
+:::
+
+::: {.fragment}
+### Variants
+
+| Type | Description |
+|---|---|
+| Simple Queue | FIFO |
+| Circular Queue | ring buffer |
+| Priority Queue | sorted by priority |
+| Deque | insert / remove both ends |
+:::
+:::
+:::
+
+---
+
+## Hash Tables — How Hashing Works {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **hash table** maps **keys → values** using a **hash function**:
+
+$$index = hash(key) \mod capacity$$
+
+::: {.fragment}
+```python
+# Python dict is a hash table
+d = {}
+d["Alice"] = "555-1234"   # insert O(1)
+d["Bob"]   = "555-5678"
+
+print(d["Alice"])          # lookup O(1)
+"Alice" in d               # membership O(1)
+del d["Bob"]               # delete O(1)
+```
+:::
+
+::: {.fragment}
+### Collision Resolution
+
+| Strategy | Idea |
+|---|---|
+| Chaining | Linked list per bucket |
+| Open addressing | Probe next free slot |
+| Robin Hood | Steal from rich slots |
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    K1(["'Alice'"]) --> HF["hash()"]
+    K2(["'Bob'"])   --> HF
+    K3(["'Carol'"]) --> HF
+    HF --> B2["[2] → 555-1234"]
+    HF --> B5["[5] → 555-5678"]
+    HF --> B7["[7] → 555-4321"]
+    B2 -->|collision| CH["[2]→ chain:<br/>555-1234<br/>555-9999"]
+    classDef k   fill:#e94560,stroke:none,color:#fff
+    classDef hf  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef b   fill:#16213e,stroke:#555,color:#eee
+    class K1,K2,K3 k
+    class HF hf
+    class B2,B5,B7,CH b
+```
+:::
+
+::: {.fragment}
+| Operation | Average | Worst |
+|---|---|---|
+| Insert | O(1) | O(n) |
+| Lookup | O(1) | O(n) |
+| Delete | O(1) | O(n) |
+:::
+:::
+:::
+
+---
+
+## Trees — Core Concepts {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="50%"}
+A **tree** is a hierarchical, non-linear data structure consisting of **nodes** connected by **edges**, with no cycles.
+
+::: {.fragment}
+Key terminology:
+
+- **Root** — top-most node (no parent)
+- **Leaf** — node with no children
+- **Height** — longest path root → leaf
+- **Depth** — distance from root to node
+- **Subtree** — tree rooted at any node
+:::
+
+::: {.fragment}
+```python
+class TreeNode:
+    def __init__(self, val):
+        self.val   = val
+        self.left  = None
+        self.right = None
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ROOT["1<br/>ROOT<br/>depth=0"] --> N2["2<br/>depth=1"]
+    ROOT --> N3["3<br/>depth=1"]
+    N2   --> N4["4<br/>LEAF"]
+    N2   --> N5["5<br/>LEAF"]
+    N3   --> N6["6<br/>LEAF"]
+    N3   --> N7["7<br/>LEAF"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    classDef leaf fill:#16213e,stroke:#4ecca3,color:#fff
+    class ROOT root
+    class N2,N3 node
+    class N4,N5,N6,N7 leaf
+```
+
+Height = **2** · Leaves = **4** · Nodes = **7**
+:::
+:::
+:::
+
+---
+
+## Binary Search Tree (BST) {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **BST** enforces an ordering property on every node:
+
+> **left subtree < node < right subtree**
+
+::: {.fragment}
+```{.python code-line-numbers="1-8|10-18|20-28"}
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, val):
+        self.root = self._insert(self.root, val)
+
+    def _insert(self, node, val):
+        if node is None:
+            return TreeNode(val)
+        if val < node.val:
+            node.left  = self._insert(node.left, val)
+        elif val > node.val:
+            node.right = self._insert(node.right, val)
+        return node
+
+    def search(self, val) -> bool:
+        cur = self.root
+        while cur:
+            if   val == cur.val: return True
+            elif val <  cur.val: cur = cur.left
+            else:                cur = cur.right
+        return False
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    R["50"] --> L["30"]
+    R --> RI["70"]
+    L --> LL["20"]
+    L --> LR["40"]
+    RI --> RL["60"]
+    RI --> RR["80"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class R root
+    class L,RI,LL,LR,RL,RR node
+```
+:::
+
+::: {.fragment}
+| Operation | Average | Worst (skewed) |
+|---|---|---|
+| Search | O(log n) | O(n) |
+| Insert | O(log n) | O(n) |
+| Delete | O(log n) | O(n) |
+
+Worst case occurs when tree is **unbalanced** (sorted input).
+:::
+:::
+:::
+
+---
+
+## Tree Traversals {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Three fundamental **depth-first** traversals of a binary tree:
+
+::: {.fragment}
+```python
+def inorder(node):      # Left → Root → Right
+    if node:
+        inorder(node.left)
+        print(node.val)
+        inorder(node.right)
+
+def preorder(node):     # Root → Left → Right
+    if node:
+        print(node.val)
+        preorder(node.left)
+        preorder(node.right)
+
+def postorder(node):    # Left → Right → Root
+    if node:
+        postorder(node.left)
+        postorder(node.right)
+        print(node.val)
+```
+:::
+
+::: {.fragment}
+::: {.callout-note}
+**Inorder** traversal of a BST always yields elements in **sorted order**.
+:::
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["4"] --> B["2"]
+    A --> C["6"]
+    B --> D["1"]
+    B --> E["3"]
+    C --> F["5"]
+    C --> G["7"]
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class A,B,C,D,E,F,G node
+```
+:::
+
+::: {.fragment}
+| Traversal | Order | Output |
+|---|---|---|
+| Inorder | L-R-Root | 1 2 3 4 5 6 7 |
+| Preorder | Root-L-R | 4 2 1 3 6 5 7 |
+| Postorder | L-R-Root | 1 3 2 5 7 6 4 |
+| Level-order | BFS | 4 2 6 1 3 5 7 |
+:::
+:::
+:::
+
+---
+
+## Heaps — Priority Queue {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **heap** is a complete binary tree satisfying the **heap property**:
+
+- **Min-Heap**: parent ≤ children → root is **minimum**
+- **Max-Heap**: parent ≥ children → root is **maximum**
+
+::: {.fragment}
+```python
+import heapq
+
+# Python's heapq is a MIN-heap by default
+heap = []
+heapq.heappush(heap, 5)
+heapq.heappush(heap, 1)
+heapq.heappush(heap, 3)
+
+print(heap[0])              # peek min → 1
+smallest = heapq.heappop(heap)  # pop → 1
+
+# Max-heap: negate values
+heapq.heappush(heap, -10)
+biggest = -heapq.heappop(heap)  # → 10
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    R["1<br/>(min)"] --> A["3"]
+    R --> B["5"]
+    A --> C["7"]
+    A --> D["9"]
+    B --> E["6"]
+    B --> F["11"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class R root
+    class A,B,C,D,E,F node
+```
+:::
+
+::: {.fragment}
+| Operation | Time |
+|---|---|
+| Push (heappush) | O(log n) |
+| Pop min/max | O(log n) |
+| Peek min/max | O(1) |
+| Build heap | O(n) |
+| Heap sort | O(n log n) |
+:::
+:::
+:::
+
+---
+
+## Graphs — Fundamentals {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **graph G = (V, E)** consists of **vertices** (nodes) connected by **edges**.
+
+::: {.fragment}
+Types of graphs:
+
+- **Undirected** — edges have no direction
+- **Directed (Digraph)** — edges have direction
+- **Weighted** — edges carry a cost/weight
+- **Cyclic / Acyclic** — may or may not contain cycles
+- **DAG** — Directed Acyclic Graph
+:::
+
+::: {.fragment}
+Representations:
+
+| Type | Space | Edge check | Neighbours |
+|---|---|---|---|
+| Adjacency Matrix | O(V²) | O(1) | O(V) |
+| Adjacency List | O(V+E) | O(deg) | O(deg) |
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    A(["A"]) -->|4| B(["B"])
+    A -->|2| C(["C"])
+    B -->|5| C
+    B -->|10| D(["D"])
+    C -->|3| D
+    C -->|8| E(["E"])
+    D -->|2| E
+    classDef v fill:#0f3460,stroke:#e94560,color:#fff
+    class A,B,C,D,E v
+```
+:::
+
+::: {.fragment}
+```python
+# Adjacency list representation
+graph = {
+    'A': ['B', 'C'],
+    'B': ['C', 'D'],
+    'C': ['D', 'E'],
+    'D': ['E'],
+    'E': []
+}
+```
+:::
+:::
+:::
+
+---
+
+## Graph — BFS (Breadth-First Search) {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**BFS** explores the graph **level by level** using a **queue**. Finds **shortest path** in unweighted graphs.
+
+::: {.fragment}
+```{.python code-line-numbers="1-5|7-17|19-21"}
+from collections import deque
+
+def bfs(graph, start):
+    visited = set()
+    queue   = deque([start])
+    visited.add(start)
+    order   = []
+
+    while queue:
+        node = queue.popleft()      # dequeue
+        order.append(node)
+
+        for neighbour in graph[node]:
+            if neighbour not in visited:
+                visited.add(neighbour)
+                queue.append(neighbour)
+
+    return order
+
+# graph = {'A': ['B','C'], 'B': ['D'], ...}
+# bfs(graph, 'A') → ['A','B','C','D','E']
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["A<br/>Level 0"] --> B["B<br/>Level 1"]
+    A --> C["C<br/>Level 1"]
+    B --> D["D<br/>Level 2"]
+    B --> E["E<br/>Level 2"]
+    C --> F["F<br/>Level 2"]
+    classDef l0 fill:#e94560,stroke:none,color:#fff
+    classDef l1 fill:#0f3460,stroke:#e94560,color:#fff
+    classDef l2 fill:#16213e,stroke:#4ecca3,color:#fff
+    class A l0
+    class B,C l1
+    class D,E,F l2
+```
+:::
+
+::: {.fragment}
+| Property | Value |
+|---|---|
+| Time complexity | O(V + E) |
+| Space complexity | O(V) |
+| Finds shortest path | ✅ (unweighted) |
+| Strategy | Queue (FIFO) |
+:::
+:::
+:::
+
+---
+
+## Graph — DFS (Depth-First Search) {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+**DFS** explores as **deep as possible** along each branch before backtracking, using a **stack** (or recursion).
+
+::: {.fragment}
+```{.python code-line-numbers="1-7|9-17|19-22"}
+def dfs_recursive(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(node)
+    print(node)
+    for neighbour in graph[node]:
+        if neighbour not in visited:
+            dfs_recursive(graph, neighbour, visited)
+
+def dfs_iterative(graph, start):
+    visited = set()
+    stack   = [start]
+    order   = []
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            order.append(node)
+            stack.extend(reversed(graph[node]))
+    return order
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["A"] -->|"① visit"| B["B"]
+    B -->|"② go deep"| D["D"]
+    D -->|"③ backtrack"| B
+    B -->|"④ visit"| E["E"]
+    E -->|"⑤ backtrack"| A
+    A -->|"⑥ visit"| C["C"]
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class A,B,C,D,E node
+```
+:::
+
+::: {.fragment}
+### BFS vs DFS
+
+| | BFS | DFS |
+|---|---|---|
+| Structure | Queue | Stack |
+| Shortest path | ✅ | ❌ |
+| Memory | O(width) | O(depth) |
+| Cycle detect | ✅ | ✅ |
+| Topological sort | ❌ | ✅ |
+:::
+:::
+:::
+
+---
+
+## Searching — Linear Search {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Linear search** scans every element from left to right until it finds the target.
+
+- Works on **unsorted** data
+- Time: **O(n)** · Space: **O(1)**
+
+::: {.fragment}
+```python
+def linear_search(arr, target):
+    for i, val in enumerate(arr):
+        if val == target:
+            return i     # found at index i
+    return -1            # not found
+
+arr = [5, 3, 8, 1, 9, 2, 7]
+print(linear_search(arr, 9))   # → 4
+print(linear_search(arr, 6))   # → -1
+```
+:::
+
+::: {.fragment}
+::: {.callout-note}
+Use linear search when the list is **small**, **unsorted**, or you need to find **all occurrences**.
+:::
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Scan for target=9"
+        direction LR
+        A0["5<br/>✗"] --> A1["3<br/>✗"] --> A2["8<br/>✗"] --> A3["1<br/>✗"] --> A4["9<br/>✅"]
+    end
+    classDef miss fill:#7a1a1a,stroke:none,color:#fff
+    classDef hit  fill:#1a6b3c,stroke:none,color:#fff
+    class A0,A1,A2,A3 miss
+    class A4 hit
+```
+:::
+
+::: {.fragment}
+| Case | Comparisons |
+|---|---|
+| Best (target at front) | O(1) |
+| Average | O(n/2) |
+| Worst (not found) | O(n) |
+:::
+:::
+:::
+
+---
+
+## Searching — Binary Search {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Binary search** works on **sorted** data, halving the search space each step.
+
+- Time: **O(log n)** · Space: **O(1)**
+
+::: {.fragment}
+```{.python code-line-numbers="1-4|5-14|16-18"}
+def binary_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:
+            return mid           # found
+        elif arr[mid] < target:
+            lo = mid + 1         # right half
+        else:
+            hi = mid - 1         # left half
+
+    return -1                     # not found
+
+arr = [1, 3, 5, 7, 9, 11, 13]
+print(binary_search(arr, 7))     # → 3
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    S0["[1  3  5  7  9  11  13]<br/>mid=7  target=7  ✅ Found!"]
+    S1["[1  3  5  7  9  11  13]<br/>mid=7  lo=0 hi=6"]
+    S1 --> S0
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef hit  fill:#1a6b3c,stroke:none,color:#fff
+    class S1 step
+    class S0 hit
+```
+:::
+
+::: {.fragment}
+**Halving example — searching in 1,000,000 elements:**
+
+| Step | Search space |
+|---|---|
+| 1 | 500,000 |
+| 5 | 31,250 |
+| 10 | 977 |
+| 20 | 1 |
+
+Only **20 comparisons** for 1M elements!
+:::
+:::
+:::
+
+---
+
+## Sorting Algorithms — Overview {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 50}}}%%
+graph LR
+    SORT["Sorting<br/>Algorithms"]
+    SORT --> COMP["Comparison-based"]
+    SORT --> NCOMP["Non-comparison"]
+    COMP --> BUB["Bubble Sort<br/>O(n²)"]
+    COMP --> SEL["Selection Sort<br/>O(n²)"]
+    COMP --> INS["Insertion Sort<br/>O(n²) / O(n) best"]
+    COMP --> MRG["Merge Sort<br/>O(n log n) stable"]
+    COMP --> QCK["Quick Sort<br/>O(n log n) avg"]
+    COMP --> HPS["Heap Sort<br/>O(n log n)"]
+    NCOMP --> CNT["Counting Sort<br/>O(n+k)"]
+    NCOMP --> RAD["Radix Sort<br/>O(nk)"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef cat  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef algo fill:#16213e,stroke:#555,color:#eee
+    class SORT root
+    class COMP,NCOMP cat
+    class BUB,SEL,INS,MRG,QCK,HPS,CNT,RAD algo
+```
+
+::: {.fragment}
+| Algorithm | Best | Average | Worst | Space | Stable |
+|---|---|---|---|---|---|
+| Bubble | O(n) | O(n²) | O(n²) | O(1) | ✅ |
+| Selection | O(n²) | O(n²) | O(n²) | O(1) | ❌ |
+| Insertion | O(n) | O(n²) | O(n²) | O(1) | ✅ |
+| Merge | O(n log n) | O(n log n) | O(n log n) | O(n) | ✅ |
+| Quick | O(n log n) | O(n log n) | O(n²) | O(log n) | ❌ |
+| Heap | O(n log n) | O(n log n) | O(n log n) | O(1) | ❌ |
+:::
+
+---
+
+## Bubble Sort {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Repeatedly **swap adjacent** elements if they are in the wrong order. Large elements **"bubble up"** to the end.
+
+::: {.fragment}
+```{.python code-line-numbers="1-4|5-10|12-14"}
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        if not swapped:       # already sorted
+            break
+    return arr
+
+arr = [64, 34, 25, 12, 22]
+print(bubble_sort(arr))  # [12, 22, 25, 34, 64]
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+The `swapped` flag gives **O(n) best case** when input is already sorted.
+:::
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+**Pass-by-pass visualisation:**
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Pass 3 → sorted tail grows"
+        direction LR
+        P1["12"] --- P2["22"] --- P3["25"] --- P4["34"] --- P5["64"]
+    end
+    subgraph "Pass 2"
+        direction LR
+        Q1["12"] --- Q2["22"] --- Q3["25"] --- Q4["34"] --- Q5["64"]
+    end
+    subgraph "Pass 1"
+        direction LR
+        R1["34"] --- R2["25"] --- R3["12"] --- R4["22"] --- R5["64"]
+    end
+    subgraph "Input"
+        direction LR
+        S1["64"] --- S2["34"] --- S3["25"] --- S4["12"] --- S5["22"]
+    end
+    classDef sorted fill:#1a6b3c,stroke:none,color:#fff
+    classDef unsort fill:#0f3460,stroke:#e94560,color:#fff
+    class P1,P2,P3,P4,P5 sorted
+    class S1,S2,S3,S4,S5 unsort
+```
+:::
+:::
+:::
+
+---
+
+## Merge Sort — Divide & Conquer {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Divide** the array in half, **recursively sort** each half, then **merge** the two sorted halves.
+
+::: {.fragment}
+```{.python code-line-numbers="1-5|7-20"}
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid   = len(arr) // 2
+    left  = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j  = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]);  i += 1
+        else:
+            result.append(right[j]); j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["[38, 27, 43, 3]"] --> B["[38, 27]"]
+    A --> C["[43, 3]"]
+    B --> D["[38]"]
+    B --> E["[27]"]
+    C --> F["[43]"]
+    C --> G["[3]"]
+    D --> DE["[27, 38]"]
+    E --> DE
+    F --> FG["[3, 43]"]
+    G --> FG
+    DE --> FINAL["[3, 27, 38, 43]"]
+    FG --> FINAL
+    classDef div  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef mrg  fill:#1a6b3c,stroke:none,color:#fff
+    class A,B,C,D,E,F,G div
+    class DE,FG,FINAL mrg
+```
+:::
+
+::: {.fragment}
+- **Always O(n log n)** — predictable
+- **Stable** — preserves relative order of equals
+- **Extra space** O(n) — not in-place
+:::
+:::
+:::
+
+---
+
+## Quick Sort — Partition & Conquer {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Choose a **pivot**, partition the array so all elements < pivot are left and > pivot are right, then recursively sort each side.
+
+::: {.fragment}
+```{.python code-line-numbers="1-5|7-15"}
+def quick_sort(arr, lo=0, hi=None):
+    if hi is None:
+        hi = len(arr) - 1
+    if lo < hi:
+        p = partition(arr, lo, hi)
+        quick_sort(arr, lo, p - 1)
+        quick_sort(arr, p + 1, hi)
+
+def partition(arr, lo, hi):
+    pivot = arr[hi]      # last element as pivot
+    i = lo - 1
+    for j in range(lo, hi):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    arr[i+1], arr[hi] = arr[hi], arr[i+1]
+    return i + 1
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["[3, 6, 8, 10, 1, 2, 1]<br/>pivot = 1"] --> L["[1] ≤ pivot"]
+    A --> P["[1] = pivot"]
+    A --> R["[3,6,8,10,2] > pivot"]
+    L --> LL["sort [1]"]
+    R --> RR["sort [2,3,6,8,10]"]
+    classDef input fill:#0f3460,stroke:#e94560,color:#fff
+    classDef part  fill:#16213e,stroke:#4ecca3,color:#fff
+    class A input
+    class L,P,R,LL,RR part
+```
+:::
+
+::: {.fragment}
+| Case | Time | Occurs when |
+|---|---|---|
+| Best | O(n log n) | Perfect pivots |
+| Average | O(n log n) | Random input |
+| Worst | O(n²) | Sorted input |
+
+::: {.callout-tip}
+Use **randomised pivot** to avoid worst case in practice.
+:::
+:::
+:::
+:::
+
+---
+
+## Recursion — Core Concepts {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A function is **recursive** if it calls itself. Every recursive solution needs:
+
+1. **Base case** — stops the recursion
+2. **Recursive case** — reduces problem toward base case
+3. **Progress** — each call must get closer to base case
+
+::: {.fragment}
+```python
+# Factorial: n! = n × (n-1)!
+def factorial(n):
+    if n == 0:           # base case
+        return 1
+    return n * factorial(n - 1)  # recursive case
+
+# Fibonacci
+def fib(n):
+    if n <= 1:           # base case
+        return n
+    return fib(n-1) + fib(n-2)  # recursive case
+
+print(factorial(5))  # 120
+print(fib(7))        # 13
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    F5["factorial(5)<br/>= 5 × 24"] --> F4["factorial(4)<br/>= 4 × 6"]
+    F4 --> F3["factorial(3)<br/>= 3 × 2"]
+    F3 --> F2["factorial(2)<br/>= 2 × 1"]
+    F2 --> F1["factorial(1)<br/>= 1 × 1"]
+    F1 --> F0["factorial(0)<br/>= 1  ← BASE"]
+    classDef calls fill:#0f3460,stroke:#e94560,color:#fff
+    classDef base fill:#e94560,stroke:none,color:#fff
+    class F5,F4,F3,F2,F1 calls
+    class F0 base
+```
+:::
+
+::: {.fragment}
+::: {.callout-warning}
+Naive `fib(n)` is **O(2ⁿ)** — exponential! Use **memoisation** or **iteration** instead.
+:::
+:::
+:::
+:::
+
+---
+
+## Dynamic Programming — Memoisation {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**DP** solves problems by breaking them into **overlapping subproblems** and storing results to avoid recomputation.
+
+::: {.fragment}
+**Two approaches:**
+
+- **Top-down (Memoisation)** — recurse + cache
+- **Bottom-up (Tabulation)** — fill table iteratively
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-9|11-18"}
+# Top-down: memoised Fibonacci
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib_memo(n):
+    if n <= 1:
+        return n
+    return fib_memo(n-1) + fib_memo(n-2)
+
+# Bottom-up: tabulated Fibonacci
+def fib_tab(n):
+    if n <= 1: return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    F5["fib(5)"] --> F4["fib(4)"]
+    F5 --> F3a["fib(3) ✅ cached"]
+    F4 --> F3b["fib(3) ✅ cached"]
+    F4 --> F2a["fib(2) ✅ cached"]
+    F3b --> F2b["fib(2) ✅ cached"]
+    F3b --> F1a["fib(1)=1"]
+    classDef live   fill:#0f3460,stroke:#e94560,color:#fff
+    classDef cached fill:#1a6b3c,stroke:none,color:#fff
+    class F5,F4,F3b live
+    class F3a,F2a,F2b,F1a cached
+```
+:::
+
+::: {.fragment}
+| Approach | Time | Space |
+|---|---|---|
+| Naive recursion | O(2ⁿ) | O(n) stack |
+| Memoisation | O(n) | O(n) cache |
+| Tabulation | O(n) | O(n) table |
+| Optimised tab. | O(n) | **O(1)** |
+:::
+:::
+:::
+
+---
+
+## DP — Classic Problems {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+### 0/1 Knapsack
+
+Given items with weights and values, maximise value within a weight limit.
+
+::: {.fragment}
+```{.python code-line-numbers="1-5|7-15"}
+def knapsack(weights, values, W):
+    n  = len(weights)
+    dp = [[0]*(W+1) for _ in range(n+1)]
+
+    for i in range(1, n+1):
+        for w in range(W+1):
+            # don't take item i
+            dp[i][w] = dp[i-1][w]
+            # take item i (if it fits)
+            if weights[i-1] <= w:
+                dp[i][w] = max(
+                    dp[i][w],
+                    values[i-1] + dp[i-1][w - weights[i-1]]
+                )
+    return dp[n][W]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+### Longest Common Subsequence
+
+```python
+def lcs(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[m][n]
+
+lcs("ABCBDAB", "BDCAB")  # → 4 ("BCAB")
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+**DP recognition clues:** overlapping subproblems, optimal substructure, "min/max/count ways" questions.
+:::
+:::
+:::
+:::
+
+---
+
+## Greedy Algorithms {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **greedy algorithm** always picks the **locally optimal** choice at each step, hoping it leads to a global optimum.
+
+::: {.fragment}
+**Greedy works when:** the problem has **optimal substructure** and the **greedy choice property**.
+
+Examples:
+- **Activity Selection** — pick non-overlapping intervals
+- **Coin Change** (canonical coins)
+- **Huffman Coding**
+- **Prim's / Kruskal's** (MST)
+- **Dijkstra's** shortest path
+:::
+
+::: {.fragment}
+```python
+# Coin change with canonical coins (greedy works!)
+def coin_change_greedy(coins, amount):
+    coins.sort(reverse=True)
+    count = 0
+    for coin in coins:
+        count   += amount // coin
+        amount  %= coin
+    return count if amount == 0 else -1
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+### Activity Selection
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+gantt
+    dateFormat HH
+    title Activity Selection (pick most, no overlap)
+    section Activities
+    A1 (selected) :done, 01, 4h
+    A2            :crit, 02, 5h
+    A3 (selected) :done, 05, 3h
+    A4            :crit, 06, 4h
+    A5 (selected) :done, 08, 2h
+```
+:::
+
+::: {.fragment}
+::: {.callout-warning}
+Greedy does **not** always work. For general coin change (arbitrary coins), use **DP**.
+:::
+:::
+:::
+:::
+
+---
+
+## Dijkstra's Shortest Path {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Finds the **shortest path** from a source node to all other nodes in a **weighted graph** with non-negative edges.
+
+Uses a **min-heap (priority queue)**.
+
+::: {.fragment}
+```{.python code-line-numbers="1-5|7-18"}
+import heapq
+
+def dijkstra(graph, src):
+    dist = {node: float('inf') for node in graph}
+    dist[src] = 0
+    heap = [(0, src)]     # (distance, node)
+
+    while heap:
+        d, u = heapq.heappop(heap)
+        if d > dist[u]:
+            continue      # stale entry
+        for v, w in graph[u]:
+            nd = dist[u] + w
+            if nd < dist[v]:
+                dist[v] = nd
+                heapq.heappush(heap, (nd, v))
+
+    return dist
+# graph = {'A':[('B',4),('C',2)], ...}
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    A(["A<br/>d=0"]) -->|4| B(["B<br/>d=4"])
+    A -->|2| C(["C<br/>d=2"])
+    C -->|1| B
+    B -->|3| D(["D<br/>d=6"])
+    C -->|8| D
+    C -->|5| E(["E<br/>d=7"])
+    D -->|2| E
+    classDef src  fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    classDef fin  fill:#1a6b3c,stroke:none,color:#fff
+    class A src
+    class B,C,D,E node
+```
+:::
+
+::: {.fragment}
+| Aspect | Value |
+|---|---|
+| Time (binary heap) | O((V+E) log V) |
+| Space | O(V) |
+| Negative edges | ❌ (use Bellman-Ford) |
+:::
+:::
+:::
+
+---
+
+## Tries — Prefix Trees {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+A **Trie** (prefix tree) stores strings character-by-character. Ideal for **autocomplete**, **spell checking**, and **IP routing**.
+
+::: {.fragment}
+```python
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end   = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):          # O(len)
+        node = self.root
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = TrieNode()
+            node = node.children[ch]
+        node.is_end = True
+
+    def search(self, word) -> bool:  # O(len)
+        node = self.root
+        for ch in word:
+            if ch not in node.children:
+                return False
+            node = node.children[ch]
+        return node.is_end
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ROOT(["root"]) --> CA["c"]
+    ROOT --> HA["h"]
+    CA --> CAA["a"]
+    CAA --> CAT["t ✅"]
+    CAA --> CAR["r ✅"]
+    HA --> HE["e"]
+    HE --> HEL["l"]
+    HEL --> HELL["l"]
+    HELL --> HELLO["o ✅"]
+    HE --> HEA["a"]
+    HEA --> HEAP["p ✅"]
+    classDef end_ fill:#1a6b3c,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class ROOT node
+    class HELLO,HEAP,CAT,CAR end_
+    class CA,HA,CAA,HE,HEL,HELL,HEA node
+```
+:::
+
+::: {.fragment}
+| Operation | Time |
+|---|---|
+| Insert | O(L) |
+| Search | O(L) |
+| Prefix check | O(L) |
+| Space | O(ALPHABET × L × N) |
+
+*L = word length, N = number of words*
+:::
+:::
+:::
+
+---
+
+## Space Complexity {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Space complexity** measures how much **extra memory** an algorithm uses relative to input size.
+
+::: {.fragment}
+### Common Space Complexities
+
+| Algorithm | Space | Why |
+|---|---|---|
+| Linear search | O(1) | Only one pointer |
+| Binary search | O(1) | Two pointers |
+| Merge sort | O(n) | Auxiliary array |
+| Quick sort | O(log n) | Call stack |
+| BFS / DFS | O(V) | Queue / stack |
+| DP knapsack | O(n×W) | 2D table |
+| DP knapsack (opt.) | O(W) | Rolling array |
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    O1["O(1) Constant<br/>In-place algorithms<br/>Counters, pointers"]
+    OLN["O(log n) Logarithmic<br/>Recursive binary search<br/>Quick sort call stack"]
+    ON["O(n) Linear<br/>Auxiliary arrays<br/>Memo tables, hash maps"]
+    ON2["O(n²) Quadratic<br/>DP tables<br/>Adjacency matrix"]
+    O1 --> OLN --> ON --> ON2
+    classDef g fill:#1a6b3c,stroke:none,color:#fff
+    classDef y fill:#7a6000,stroke:none,color:#fff
+    classDef r fill:#7a1a1a,stroke:none,color:#fff
+    class O1,OLN g
+    class ON y
+    class ON2 r
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+**Auxiliary space** vs **total space** — Big-O for space usually refers to auxiliary (extra) space, not including the input itself.
+:::
+:::
+:::
+:::
+
+---
+
+## Python Collections Cheatsheet {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Python's standard library provides efficient data structure implementations:
+
+::: {.fragment}
+```python
+from collections import deque, defaultdict, Counter, OrderedDict
+import heapq
+
+# deque — O(1) both ends
+dq = deque([1, 2, 3])
+dq.appendleft(0)    # [0,1,2,3]
+dq.popleft()        # O(1)
+
+# defaultdict — auto-initialise missing keys
+dd = defaultdict(list)
+dd["a"].append(1)   # no KeyError
+
+# Counter — frequency counting
+c = Counter("abracadabra")
+c.most_common(3)    # [('a',5),('b',2),('r',2)]
+
+# heapq — min-heap
+h = [3, 1, 4, 1, 5]
+heapq.heapify(h)    # O(n) in-place
+heapq.heappush(h, 2)
+heapq.heappop(h)    # smallest
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+### When to Use What
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    Need["What do you need?"]
+    Need --> KV["Key → Value<br/>mapping?"]
+    Need --> Order["Ordered<br/>sequence?"]
+    Need --> Unique["Unique<br/>elements?"]
+    Need --> Priority["Priority-based<br/>retrieval?"]
+    KV --> DICT["dict / defaultdict"]
+    Order --> LIST["list / deque"]
+    Unique --> SET["set / frozenset"]
+    Priority --> HEAP["heapq"]
+    classDef q    fill:#e94560,stroke:none,color:#fff
+    classDef ans  fill:#0f3460,stroke:#e94560,color:#fff
+    class Need,KV,Order,Unique,Priority q
+    class DICT,LIST,SET,HEAP ans
+```
+:::
+:::
+:::
+
+---
+
+## Algorithm Design Paradigms {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 60}}}%%
+graph LR
+    PDG["Algorithm<br/>Design Paradigms"]
+    PDG --> DC["Divide & Conquer<br/>Split → Solve → Merge<br/>Merge Sort · Quick Sort<br/>Binary Search"]
+    PDG --> GR["Greedy<br/>Locallyoptimal choice<br/>Dijkstra · Prim<br/>Huffman · Activity Sel."]
+    PDG --> DP2["Dynamic Programming<br/>Memo + Tabulation<br/>Knapsack · LCS · LIS<br/>Edit Distance · Coin Chg"]
+    PDG --> BT["Backtracking<br/>Explore all paths<br/>N-Queens · Sudoku<br/>Permutations · Subsets"]
+    PDG --> TW["Two Pointers<br/>Left+Right or Slow+Fast<br/>Palindrome · 2-Sum<br/>Linked List Cycle"]
+    PDG --> SW["Sliding Window<br/>Subarray / Substring<br/>Max Sum Subarray<br/>Longest no-repeat"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef para fill:#0f3460,stroke:#e94560,color:#fff
+    class PDG root
+    class DC,GR,DP2,BT,TW,SW para
+```
+
+::: {.fragment}
+> Recognising **which paradigm** applies is the key skill in solving DSA problems.
+:::
+
+---
+
+## Two Pointers & Sliding Window {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+### Two Pointers
+Use two indices moving toward each other or at different speeds.
+
+::: {.fragment}
+```python
+# Two Sum (sorted array) — O(n)
+def two_sum_sorted(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo < hi:
+        s = arr[lo] + arr[hi]
+        if   s == target: return (lo, hi)
+        elif s < target:  lo += 1
+        else:             hi -= 1
+    return None
+```
+:::
+
+### Sliding Window
+
+::: {.fragment}
+```python
+# Max sum subarray of size k — O(n)
+def max_sum_window(arr, k):
+    win = sum(arr[:k])
+    best = win
+    for i in range(k, len(arr)):
+        win  += arr[i] - arr[i-k]
+        best  = max(best, win)
+    return best
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Two Pointers — converging"
+        direction LR
+        L(["L →"]) --- A1[1] --- A2[2] --- A3[5] --- A4[8] --- A5[9]
+        A5 --- R(["← R"])
+    end
+    subgraph "Sliding Window — fixed size k=3"
+        direction LR
+        W1["[2  3  5]  4  1"] --> W2["2  [3  5  4]  1"] --> W3["2  3  [5  4  1]"]
+    end
+    classDef ptr  fill:#e94560,stroke:none,color:#fff
+    classDef win  fill:#0f3460,stroke:#e94560,color:#fff
+    class L,R ptr
+    class W1,W2,W3 win
+```
+:::
+:::
+:::
+
+---
+
+## Complexity Cheatsheet {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Data Structures
+
+| Structure | Access | Search | Insert | Delete |
+|---|---|---|---|---|
+| Array | O(1) | O(n) | O(n) | O(n) |
+| Dynamic Array | O(1) | O(n) | O(1)* | O(n) |
+| Linked List | O(n) | O(n) | O(1) | O(1)† |
+| Stack | O(n) | O(n) | O(1) | O(1) |
+| Queue | O(n) | O(n) | O(1) | O(1) |
+| Hash Table | — | O(1)* | O(1)* | O(1)* |
+| BST | O(log n)* | O(log n)* | O(log n)* | O(log n)* |
+| Heap | — | O(n) | O(log n) | O(log n) |
+
+*amortised / average · †given node pointer
+:::
+
+::: {.column width="50%"}
+### Sorting Algorithms
+
+| Algorithm | Best | Avg | Worst | Space |
+|---|---|---|---|---|
+| Bubble | O(n) | O(n²) | O(n²) | O(1) |
+| Insertion | O(n) | O(n²) | O(n²) | O(1) |
+| Selection | O(n²) | O(n²) | O(n²) | O(1) |
+| Merge | O(n log n) | O(n log n) | O(n log n) | O(n) |
+| Quick | O(n log n) | O(n log n) | O(n²) | O(log n) |
+| Heap | O(n log n) | O(n log n) | O(n log n) | O(1) |
+| Counting | O(n+k) | O(n+k) | O(n+k) | O(k) |
+
+::: {.fragment}
+::: {.callout-tip}
+Python's built-in `list.sort()` uses **Timsort** — O(n log n) worst case, O(n) nearly-sorted.
+:::
+:::
+:::
+:::
+
+---
+
+## Summary & Learning Path {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 55, 'nodeSpacing': 35}}}%%
+graph LR
+    START(["🚀 Start"]) --> BEGINNER
+    subgraph BEGINNER["🟢 Foundations"]
+        B1["Big-O Notation"] --> B2["Arrays & Strings"]
+        B2 --> B3["Linked Lists"]
+        B3 --> B4["Stacks & Queues"]
+    end
+    BEGINNER --> INTER
+    subgraph INTER["🟡 Intermediate"]
+        I1["Hash Tables"] --> I2["Trees & BST"]
+        I2 --> I3["Heaps & Tries"]
+        I3 --> I4["Sorting Algorithms"]
+    end
+    INTER --> ADV
+    subgraph ADV["🔴 Advanced"]
+        A1["Graphs<br/>BFS · DFS"] --> A2["Dynamic<br/>Programming"]
+        A2 --> A3["Greedy &<br/>Backtracking"]
+        A3 --> A4["Dijkstra ·<br/>System Design"]
+    end
+    ADV --> EXPERT(["🏆 Interview Ready"])
+    classDef start  fill:#e94560,stroke:none,color:#fff
+    classDef end_   fill:#1a6b3c,stroke:none,color:#fff
+    classDef beg    fill:#0f3460,stroke:#4ecca3,color:#fff
+    classDef int_   fill:#16213e,stroke:#f5a623,color:#fff
+    classDef adv    fill:#1a1a2e,stroke:#e94560,color:#fff
+    class START start
+    class EXPERT end_
+    class B1,B2,B3,B4 beg
+    class I1,I2,I3,I4 int_
+    class A1,A2,A3,A4 adv
+```
+
+::: {.fragment}
+> **Practice beats theory.** Solve 2–3 problems per topic on LeetCode / HackerRank, then revisit complexity until it becomes instinct.
+:::
+
+---
+
+## DSA Patterns — The 18 Universal Templates {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 50, 'nodeSpacing': 30}}}%%
+graph LR
+    P["🗂 DSA<br/>Patterns"]
+    P --> A["Arrays / Strings"]
+    P --> B["Linked Lists"]
+    P --> C["Trees / Graphs"]
+    P --> D["Intervals / DP"]
+    A --> A1["Two Pointers"]
+    A --> A2["Sliding Window"]
+    A --> A3["Prefix Sum"]
+    A --> A4["Monotonic Stack"]
+    A --> A5["Top-K Elements"]
+    B --> B1["Fast & Slow<br/>Pointers"]
+    B --> B2["In-place<br/>List Reversal"]
+    C --> C1["Tree BFS<br/>(Level Order)"]
+    C --> C2["Tree DFS<br/>(Pre/In/Post)"]
+    C --> C3["Topological Sort"]
+    C --> C4["Union-Find"]
+    C --> C5["Modified<br/>Binary Search"]
+    D --> D1["Merge Intervals"]
+    D --> D2["Cyclic Sort"]
+    D --> D3["0-1 Knapsack<br/>(DP)"]
+    D --> D4["Two Heaps"]
+    D --> D5["K-way Merge"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef cat  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef leaf fill:#16213e,stroke:#555,color:#ccc
+    class P root
+    class A,B,C,D cat
+    class A1,A2,A3,A4,A5,B1,B2,C1,C2,C3,C4,C5,D1,D2,D3,D4,D5 leaf
+```
+
+---
+
+## Pattern 1 — Two Pointers {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Move two indices through an array — often **converging** (left←→right) or **same-direction** (slow/fast).
+
+::: {.fragment}
+**Signal words:** *pair, triplet, sorted array, palindrome, two-sum*
+
+```{.python code-line-numbers="1-9|11-19"}
+# ── Converging: Two Sum II (sorted)
+def two_sum_sorted(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo < hi:
+        s = arr[lo] + arr[hi]
+        if   s == target: return [lo, hi]
+        elif s < target:  lo += 1
+        else:             hi -= 1
+    return []
+
+# ── Same-direction: Remove Duplicates
+def remove_duplicates(arr):
+    if not arr: return 0
+    slow = 0
+    for fast in range(1, len(arr)):
+        if arr[fast] != arr[slow]:
+            slow += 1
+            arr[slow] = arr[fast]
+    return slow + 1
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Converging — find pair summing to 9"
+        direction LR
+        L(["L=0"]) --> A1["1"] --- A2["2"] --- A3["4"] --- A4["6"] --- A5["8"]
+        A5 --> R(["R=4"])
+    end
+    subgraph "Same-direction — slow writes, fast reads"
+        direction LR
+        S(["slow"]) --> B1["1"] --- B2["1"] --- B3["2"] --- B4["3"] --- B5["3"]
+        B3 --> F(["fast"])
+    end
+    classDef ptr fill:#e94560,stroke:none,color:#fff
+    class L,R,S,F ptr
+```
+:::
+
+::: {.fragment}
+| Variant | Typical Complexity |
+|---|---|
+| Converging | O(n) time · O(1) space |
+| Same-direction | O(n) time · O(1) space |
+| 3-Sum | O(n²) time · O(1) space |
+:::
+:::
+:::
+
+---
+
+## Pattern 2 — Sliding Window {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Maintain a **window** (subarray / substring) that grows and shrinks to satisfy a constraint. Avoids recomputing from scratch.
+
+::: {.fragment}
+**Signal words:** *subarray, substring, contiguous, max/min of k elements*
+
+```{.python code-line-numbers="1-10|12-23"}
+# ── Fixed window: Max sum of k elements
+def max_sum_k(arr, k):
+    win  = sum(arr[:k])
+    best = win
+    for i in range(k, len(arr)):
+        win  += arr[i] - arr[i - k]
+        best  = max(best, win)
+    return best
+
+# ── Variable window: Longest substring, no repeat
+def length_of_longest(s):
+    seen = {}
+    best = lo = 0
+    for hi, ch in enumerate(s):
+        if ch in seen and seen[ch] >= lo:
+            lo = seen[ch] + 1    # shrink left
+        seen[ch] = hi
+        best = max(best, hi - lo + 1)
+    return best
+
+print(length_of_longest("abcabcbb"))  # 3
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Fixed window k=3 sliding right"
+        direction LR
+        W1["[2  3  5] 4  1  6"] --> W2["2 [3  5  4] 1  6"] --> W3["2  3 [5  4  1] 6"] --> W4["2  3  5 [4  1  6]"]
+    end
+    classDef win fill:#0f3460,stroke:#e94560,color:#fff
+    class W1,W2,W3,W4 win
+```
+:::
+
+::: {.fragment}
+### Variable window template
+
+```python
+lo = 0
+for hi in range(len(arr)):
+    # expand: include arr[hi]
+    while <window_invalid>:
+        # shrink: exclude arr[lo]
+        lo += 1
+    # record best window [lo..hi]
+```
+:::
+:::
+:::
+
+---
+
+## Pattern 3 — Fast & Slow Pointers {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Two pointers advance at **different speeds** through a linked list or array. The fast pointer moves 2× as fast.
+
+::: {.fragment}
+**Signal words:** *cycle detection, middle of list, nth from end*
+
+```{.python code-line-numbers="1-11|13-23"}
+# ── Detect cycle (Floyd's algorithm)
+def has_cycle(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True   # cycle found
+    return False
+
+# ── Find middle of linked list
+def find_middle(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+    return slow   # slow is at middle
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    H(["head"]) --> N1["1"] --> N2["2"] --> N3["3"] --> N4["4"] --> N5["5"]
+    N5 -->|cycle| N3
+    S1(["slow<br/>step 1"]) -.-> N2
+    F1(["fast<br/>step 2"]) -.-> N3
+    classDef ptr fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    classDef h fill:#1a6b3c,stroke:none,color:#fff
+    class S1,F1 ptr
+    class H h
+    class N1,N2,N3,N4,N5 node
+```
+:::
+
+::: {.fragment}
+| Use Case | How |
+|---|---|
+| Cycle detection | slow==fast → cycle |
+| Cycle start | reset slow to head, move both 1 step |
+| Middle node | slow stops at middle |
+| Nth from end | fast advances N steps first |
+:::
+:::
+:::
+
+---
+
+## Pattern 4 — In-place Linked List Reversal {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Reverse a linked list (or a sub-section) **in-place** using three pointers: `prev`, `curr`, `next`.
+
+::: {.fragment}
+**Signal words:** *reverse a list, reverse between positions, k-group reversal*
+
+```{.python code-line-numbers="1-10|12-21"}
+# ── Reverse entire linked list
+def reverse_list(head):
+    prev, curr = None, head
+    while curr:
+        nxt       = curr.next
+        curr.next = prev
+        prev      = curr
+        curr      = nxt
+    return prev   # new head
+
+# ── Reverse sublist [left..right]
+def reverse_between(head, left, right):
+    dummy = ListNode(0, head)
+    pre   = dummy
+    for _ in range(left - 1):
+        pre = pre.next
+    cur = pre.next
+    for _ in range(right - left):
+        nxt       = cur.next
+        cur.next  = nxt.next
+        nxt.next  = pre.next
+        pre.next  = nxt
+    return dummy.next
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Before"
+        direction LR
+        P1(["prev=None"]) -.-> A1
+        A1["1"] --> A2["2"] --> A3["3"] --> A4["4"] --> A5["None"]
+        C1(["curr"]) -.-> A1
+    end
+    subgraph "After"
+        direction LR
+        B5["None"] --> B4["1"] --> B3["2"] --> B2["3"] --> B1["4"]
+        NH(["new head"]) -.-> B1
+    end
+    classDef ptr  fill:#e94560,stroke:none,color:#fff
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class P1,C1,NH ptr
+    class A1,A2,A3,A4,B1,B2,B3,B4 node
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+Always attach a **dummy head** node before position 1 to handle the edge case of reversing from the beginning of the list.
+:::
+:::
+:::
+:::
+
+---
+
+## Pattern 5 — Tree BFS / Level-Order {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Process a tree **level by level** using a queue. Captures all nodes at the same depth together.
+
+::: {.fragment}
+**Signal words:** *level order, zigzag, right side view, minimum depth, connect level nodes*
+
+```{.python code-line-numbers="1-4|6-16"}
+from collections import deque
+
+def level_order(root):
+    if not root: return []
+    result = []
+    queue  = deque([root])
+
+    while queue:
+        level = []
+        for _ in range(len(queue)):   # snapshot size
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:  queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+
+    return result
+# [[1], [2,3], [4,5,6,7]]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    L0["Level 0: [1]"]
+    L1["Level 1: [2, 3]"]
+    L2["Level 2: [4, 5, 6, 7]"]
+    N1["1"] --> N2["2"]
+    N1 --> N3["3"]
+    N2 --> N4["4"]
+    N2 --> N5["5"]
+    N3 --> N6["6"]
+    N3 --> N7["7"]
+    classDef l0 fill:#e94560,stroke:none,color:#fff
+    classDef l1 fill:#0f3460,stroke:#e94560,color:#fff
+    classDef l2 fill:#16213e,stroke:#4ecca3,color:#fff
+    class N1 l0
+    class N2,N3 l1
+    class N4,N5,N6,N7 l2
+```
+:::
+
+::: {.fragment}
+**Common variants:**
+
+- Zigzag level order (alternate direction)
+- Right/Left side view (last node per level)
+- Minimum depth (first leaf found)
+- Average of levels
+:::
+:::
+:::
+
+---
+
+## Pattern 6 — Tree DFS {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Traverse a tree recursively (or with a stack) exploring **all the way down** before backtracking.
+
+::: {.fragment}
+**Signal words:** *path sum, max depth, validate BST, diameter, lowest common ancestor*
+
+```{.python code-line-numbers="1-10|12-22"}
+# ── Has Root-to-Leaf path summing to target
+def has_path_sum(root, target):
+    if not root:
+        return False
+    if not root.left and not root.right:
+        return root.val == target
+    rem = target - root.val
+    return has_path_sum(root.left,  rem) \
+        or has_path_sum(root.right, rem)
+
+# ── All root-to-leaf paths
+def all_paths(root):
+    paths, path = [], []
+    def dfs(node):
+        if not node: return
+        path.append(node.val)
+        if not node.left and not node.right:
+            paths.append(list(path))
+        dfs(node.left); dfs(node.right)
+        path.pop()
+    dfs(root)
+    return paths
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    R["5"] --> A["4"]
+    R --> B["8"]
+    A --> C["11"]
+    C --> D["7"]
+    C --> E["2"]
+    B --> F["13"]
+    B --> G["4"]
+    G --> H["1"]
+    D -.->|"path 5→4→11→7<br/>sum=27"| RES(["target=22<br/>❌"])
+    E -.->|"path 5→4→11→2<br/>sum=22"| RES2(["target=22<br/>✅"])
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    classDef yes  fill:#1a6b3c,stroke:none,color:#fff
+    classDef no   fill:#7a1a1a,stroke:none,color:#fff
+    class R,A,B,C,D,E,F,G,H node
+    class RES2 yes
+    class RES no
+```
+:::
+:::
+:::
+
+---
+
+## Pattern 7 — Modified Binary Search {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Adapt binary search for **rotated arrays, unknown size, finding conditions** — not just exact value search.
+
+::: {.fragment}
+**Signal words:** *sorted (or rotated) array, find first/last occurrence, peak element, search condition*
+
+```{.python code-line-numbers="1-9|11-22"}
+# ── Find first position of target (leftmost)
+def find_first(arr, target):
+    lo, hi, result = 0, len(arr)-1, -1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:
+            result = mid; hi = mid - 1   # keep going left
+        elif arr[mid] < target: lo = mid + 1
+        else:                   hi = mid - 1
+    return result
+
+# ── Search in rotated sorted array
+def search_rotated(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target: return mid
+        if arr[lo] <= arr[mid]:     # left half sorted
+            if arr[lo] <= target < arr[mid]: hi = mid - 1
+            else:                            lo = mid + 1
+        else:                       # right half sorted
+            if arr[mid] < target <= arr[hi]: lo = mid + 1
+            else:                            hi = mid - 1
+    return -1
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ROT["Rotated array<br/>[4, 5, 6, 7, 0, 1, 2]"]
+    ROT --> Q["mid = arr[3] = 7<br/>target = 0"]
+    Q --> LEFT["Left half [4..7]<br/>sorted? YES"]
+    Q --> RIGHT["Right half [0..2]<br/>target 0 in here?"]
+    RIGHT --> NARROW["Narrow to right half<br/>lo = mid+1"]
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef dec  fill:#e94560,stroke:none,color:#fff
+    class ROT,Q,LEFT,RIGHT,NARROW step
+```
+:::
+
+::: {.fragment}
+**Template variations:**
+
+| Problem | Adjust |
+|---|---|
+| First/last occurrence | record `mid`, keep searching |
+| Peak element | compare `mid` with `mid+1` |
+| Min in rotated array | find inflection point |
+| Search in matrix | treat 2D as 1D |
+:::
+:::
+:::
+
+---
+
+## Pattern 8 — Top-K Elements (Heap) {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Use a **heap of size K** to efficiently track the top K elements — avoiding a full sort.
+
+::: {.fragment}
+**Signal words:** *top K, K largest/smallest, K closest, K most frequent*
+
+```{.python code-line-numbers="1-10|12-21"}
+import heapq
+
+# ── K largest elements — min-heap of size K
+def k_largest(arr, k):
+    heap = arr[:k]
+    heapq.heapify(heap)                  # O(k)
+    for num in arr[k:]:
+        if num > heap[0]:
+            heapq.heapreplace(heap, num) # O(log k)
+    return heap                          # total O(n log k)
+
+# ── K most frequent elements
+from collections import Counter
+
+def top_k_frequent(nums, k):
+    freq  = Counter(nums)
+    return heapq.nlargest(k, freq, key=freq.get)
+
+print(top_k_frequent([1,1,1,2,2,3], 2))  # [1, 2]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    IN["nums = [3,1,5,12,2,11]<br/>k = 3"] --> HEAP["Min-Heap (size k=3)<br/>[3, 1, 5]"]
+    HEAP --> C1["num=12 > heap[0]=1<br/>replace → [3, 5, 12]"]
+    C1 --> C2["num=2 < heap[0]=3<br/>skip"]
+    C2 --> C3["num=11 > heap[0]=3<br/>replace → [5, 12, 11]"]
+    C3 --> OUT(["Result: [5, 11, 12]"])
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef out  fill:#1a6b3c,stroke:none,color:#fff
+    class IN,HEAP,C1,C2,C3 step
+    class OUT out
+```
+:::
+
+::: {.fragment}
+| Approach | Time | Space |
+|---|---|---|
+| Sort + slice | O(n log n) | O(1) |
+| Min-heap size K | **O(n log k)** | O(k) |
+| Quickselect | O(n) avg | O(1) |
+:::
+:::
+:::
+
+---
+
+## Pattern 9 — Merge Intervals {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Sort intervals by start time, then greedily merge overlapping ones.
+
+::: {.fragment}
+**Signal words:** *intervals, overlapping, meeting rooms, insert interval, free time*
+
+```{.python code-line-numbers="1-4|5-13"}
+# ── Merge Overlapping Intervals
+def merge(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = [intervals[0]]
+
+    for start, end in intervals[1:]:
+        if start <= merged[-1][1]:           # overlap
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])      # no overlap
+
+    return merged
+
+print(merge([[1,3],[2,6],[8,10],[15,18]]))
+# → [[1,6],[8,10],[15,18]]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+gantt
+    dateFormat X
+    axisFormat %s
+    section Input (sorted)
+    [1,3]    :a1, 1, 3
+    [2,6]    :a2, 2, 6
+    [8,10]   :a3, 8, 10
+    [15,18]  :a4, 15, 18
+    section Merged
+    [1,6]    :done, m1, 1, 6
+    [8,10]   :done, m2, 8, 10
+    [15,18]  :done, m3, 15, 18
+```
+:::
+
+::: {.fragment}
+**Common variants:**
+
+| Problem | Key Change |
+|---|---|
+| Insert interval | binary search insertion point |
+| Meeting rooms I | any overlap? |
+| Meeting rooms II | min rooms = max overlapping at once |
+| Employee free time | merge all, find gaps |
+:::
+:::
+:::
+
+---
+
+## Pattern 10 — Cyclic Sort {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+When numbers are in a range **[1..n]** (or [0..n]), each number belongs at a predictable index. Swap elements to their correct positions in **O(n)**.
+
+::: {.fragment}
+**Signal words:** *missing number, duplicate, first missing positive, numbers in range 1..n*
+
+```{.python code-line-numbers="1-10|12-20"}
+# ── Cyclic Sort — put each num at index num-1
+def cyclic_sort(nums):
+    i = 0
+    while i < len(nums):
+        j = nums[i] - 1            # correct index
+        if nums[i] != nums[j]:
+            nums[i], nums[j] = nums[j], nums[i]
+        else:
+            i += 1
+    return nums
+
+# ── Find Missing Number  [0..n]
+def find_missing(nums):
+    i = 0
+    while i < len(nums):
+        j = nums[i]
+        if nums[i] < len(nums) and nums[i] != nums[j]:
+            nums[i], nums[j] = nums[j], nums[i]
+        else:
+            i += 1
+    for i, num in enumerate(nums):
+        if num != i: return i
+    return len(nums)
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "nums = [3, 1, 5, 4, 2]"
+        direction LR
+        S0["[3, 1, 5, 4, 2]"]
+        S0 -->|"swap idx0↔idx2"| S1["[5, 1, 3, 4, 2]"]
+        S1 -->|"swap idx0↔idx4"| S2["[2, 1, 3, 4, 5]"]
+        S2 -->|"swap idx0↔idx1"| S3["[1, 2, 3, 4, 5] ✅"]
+    end
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef done fill:#1a6b3c,stroke:none,color:#fff
+    class S0,S1,S2 step
+    class S3 done
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+After the sort pass, a single scan finds mismatches — revealing **missing** or **duplicate** numbers without extra space.
+:::
+:::
+:::
+:::
+
+---
+
+## Pattern 11 — Two Heaps {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Maintain a **max-heap** for the lower half and a **min-heap** for the upper half to efficiently query the **median** in a stream.
+
+::: {.fragment}
+**Signal words:** *median of a stream, sliding window median, schedule tasks*
+
+```{.python code-line-numbers="1-7|9-22"}
+import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.lo = []   # max-heap (negate values)
+        self.hi = []   # min-heap
+
+    def add_num(self, num):
+        heapq.heappush(self.lo, -num)      # push to max-heap
+        # balance: max(lo) must be ≤ min(hi)
+        if self.hi and -self.lo[0] > self.hi[0]:
+            heapq.heappush(self.hi, -heapq.heappop(self.lo))
+        # size balance: lo may have one extra
+        if len(self.lo) > len(self.hi) + 1:
+            heapq.heappush(self.hi, -heapq.heappop(self.lo))
+        elif len(self.hi) > len(self.lo):
+            heapq.heappush(self.lo, -heapq.heappop(self.hi))
+
+    def find_median(self):
+        if len(self.lo) > len(self.hi):
+            return -self.lo[0]
+        return (-self.lo[0] + self.hi[0]) / 2
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph "Lower half (max-heap)"
+        direction TB
+        L1["3"] --> L2["2"] --> L3["1"]
+    end
+    subgraph "Upper half (min-heap)"
+        direction TB
+        H1["4"] --> H2["5"] --> H3["6"]
+    end
+    MED(["median = (3+4)/2 = 3.5"])
+    L1 -.->|"top of lo"| MED
+    H1 -.->|"top of hi"| MED
+    classDef lh fill:#0f3460,stroke:#e94560,color:#fff
+    classDef uh fill:#16213e,stroke:#4ecca3,color:#fff
+    classDef m  fill:#e94560,stroke:none,color:#fff
+    class L1,L2,L3 lh
+    class H1,H2,H3 uh
+    class MED m
+```
+:::
+:::
+:::
+
+---
+
+## Pattern 12 — Topological Sort {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Order nodes of a **Directed Acyclic Graph (DAG)** such that every edge `u → v` comes before `v`. Uses **in-degree** tracking + BFS (Kahn's algorithm).
+
+::: {.fragment}
+**Signal words:** *task scheduling, course prerequisites, build order, dependency resolution*
+
+```{.python code-line-numbers="1-7|9-20"}
+from collections import deque, defaultdict
+
+def topo_sort(n, prerequisites):
+    graph   = defaultdict(list)
+    in_deg  = [0] * n
+    for a, b in prerequisites:
+        graph[b].append(a)      # b must come before a
+        in_deg[a] += 1
+
+    queue = deque(i for i in range(n) if in_deg[i] == 0)
+    order = []
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for nxt in graph[node]:
+            in_deg[nxt] -= 1
+            if in_deg[nxt] == 0:
+                queue.append(nxt)
+
+    return order if len(order) == n else []  # [] = cycle
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    A["Maths<br/>in-deg 0"] --> C["Algorithms<br/>in-deg 2"]
+    B["Python<br/>in-deg 0"] --> C
+    B --> D["Data Structures<br/>in-deg 1"]
+    D --> C
+    C --> E["Interview<br/>Prep"]
+    classDef zero fill:#1a6b3c,stroke:none,color:#fff
+    classDef wait fill:#0f3460,stroke:#e94560,color:#fff
+    classDef last fill:#e94560,stroke:none,color:#fff
+    class A,B zero
+    class C,D wait
+    class E last
+```
+:::
+
+::: {.fragment}
+Order: A → B → D → C → E  
+*If a cycle exists, not all nodes are added → detect it!*
+:::
+:::
+:::
+
+---
+
+## Pattern 13 — Union-Find (Disjoint Set) {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Efficiently **group elements** into disjoint sets with near-O(1) `union` and `find` operations using **path compression** + **union by rank**.
+
+::: {.fragment}
+**Signal words:** *connected components, cycle detection, number of islands, redundant connection*
+
+```{.python code-line-numbers="1-8|10-18|20-26"}
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank   = [0] * n
+        self.count  = n   # number of components
+
+    def find(self, x):            # path compression
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):        # union by rank
+        rx, ry = self.find(x), self.find(y)
+        if rx == ry: return False  # already same set
+        if self.rank[rx] < self.rank[ry]: rx, ry = ry, rx
+        self.parent[ry] = rx
+        if self.rank[rx] == self.rank[ry]: self.rank[rx] += 1
+        self.count -= 1
+        return True
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph "Before union(3,4)"
+        direction LR
+        G1["0"] --- G2["1"] --- G3["2"]
+        G4["3"]
+        G5["4"]
+    end
+    subgraph "After union(3,4)"
+        direction LR
+        H1["0"] --- H2["1"] --- H3["2"]
+        H4["3"] --- H5["4"]
+    end
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    class G1,G2,G3,G4,G5,H1,H2,H3,H4,H5 node
+```
+:::
+
+::: {.fragment}
+| Operation | Time (amortised) |
+|---|---|
+| find | O(α(n)) ≈ O(1) |
+| union | O(α(n)) ≈ O(1) |
+| connected? | O(α(n)) ≈ O(1) |
+
+*(α = inverse Ackermann function)*
+:::
+:::
+:::
+
+---
+
+## Pattern 14 — Prefix Sum {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Precompute **cumulative sums** so any subarray sum is retrieved in **O(1)**.
+
+$$sum(l, r) = prefix[r+1] - prefix[l]$$
+
+::: {.fragment}
+**Signal words:** *subarray sum, range sum query, number of subarrays with sum k*
+
+```{.python code-line-numbers="1-9|11-22"}
+# ── Range sum queries in O(1) after O(n) build
+def build_prefix(arr):
+    prefix = [0] * (len(arr) + 1)
+    for i, v in enumerate(arr):
+        prefix[i+1] = prefix[i] + v
+    return prefix
+
+def range_sum(prefix, l, r):
+    return prefix[r+1] - prefix[l]
+
+# ── Count subarrays with sum == k  (hash map)
+from collections import defaultdict
+
+def subarray_sum_k(nums, k):
+    count   = 0
+    running = 0
+    seen    = defaultdict(int)
+    seen[0] = 1                      # empty prefix
+    for num in nums:
+        running += num
+        count   += seen[running - k] # complement found
+        seen[running] += 1
+    return count
+
+print(subarray_sum_k([1,1,1], 2))    # → 2
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "arr = [3, 0, -2, 6, 1]"
+        direction LR
+        A0["3"] --- A1["0"] --- A2["-2"] --- A3["6"] --- A4["1"]
+    end
+    subgraph "prefix = [0, 3, 3, 1, 7, 8]"
+        direction LR
+        P0["0"] --- P1["3"] --- P2["3"] --- P3["1"] --- P4["7"] --- P5["8"]
+    end
+    QUERY(["sum(2,4) = prefix[5]-prefix[2]<br/>= 8-3 = 5"])
+    classDef arr   fill:#0f3460,stroke:#e94560,color:#fff
+    classDef pre   fill:#16213e,stroke:#4ecca3,color:#fff
+    classDef query fill:#e94560,stroke:none,color:#fff
+    class A0,A1,A2,A3,A4 arr
+    class P0,P1,P2,P3,P4,P5 pre
+    class QUERY query
+```
+:::
+:::
+:::
+
+---
+
+## Pattern 15 — Monotonic Stack {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Maintain a stack whose elements are always **monotonically increasing or decreasing**. Used to find **next greater/smaller** elements in O(n).
+
+::: {.fragment}
+**Signal words:** *next greater element, daily temperatures, largest rectangle, trapping rain water*
+
+```{.python code-line-numbers="1-12|14-22"}
+# ── Next Greater Element  O(n)
+def next_greater(nums):
+    result = [-1] * len(nums)
+    stack  = []           # stores indices, decreasing values
+
+    for i, val in enumerate(nums):
+        while stack and nums[stack[-1]] < val:
+            idx          = stack.pop()
+            result[idx]  = val   # val is the next greater
+        stack.append(i)
+
+    return result         # remaining stack entries stay -1
+
+# ── Daily Temperatures
+def daily_temps(T):
+    result = [0] * len(T)
+    stack  = []
+    for i, temp in enumerate(T):
+        while stack and T[stack[-1]] < temp:
+            j          = stack.pop()
+            result[j]  = i - j
+        stack.append(i)
+    return result
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "nums = [2, 1, 5, 3, 6]"
+        direction LR
+        N0["2"] --- N1["1"] --- N2["5"] --- N3["3"] --- N4["6"]
+    end
+    subgraph "Next Greater Result"
+        direction LR
+        R0["5"] --- R1["5"] --- R2["6"] --- R3["6"] --- R4["-1"]
+    end
+    classDef inp fill:#0f3460,stroke:#e94560,color:#fff
+    classDef res fill:#1a6b3c,stroke:none,color:#fff
+    class N0,N1,N2,N3,N4 inp
+    class R0,R1,R2,R3,R4 res
+```
+:::
+
+::: {.fragment}
+| Stack type | Solves |
+|---|---|
+| Decreasing (pop on larger) | Next Greater Element |
+| Increasing (pop on smaller) | Next Smaller Element |
+| Decreasing with area calc | Largest Rectangle |
+:::
+:::
+:::
+
+---
+
+## Pattern 16 — 0/1 Knapsack DP Family {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A family of DP problems where you either **take or skip** an item each step. Recognise by the binary choice at each element.
+
+::: {.fragment}
+**Signal words:** *subset sum, 0/1 knapsack, partition equal subset, target sum (count ways)*
+
+```{.python code-line-numbers="1-11|13-23"}
+# ── Subset Sum — does a subset sum to target?
+def can_partition(nums, target):
+    dp = {0}                          # reachable sums
+    for num in nums:
+        dp |= {s + num for s in dp}   # take or skip
+    return target in dp
+
+# ── Count ways to reach target
+def count_ways(nums, target):
+    dp = [0] * (target + 1)
+    dp[0] = 1                         # 1 way to sum to 0
+    for num in nums:
+        for t in range(target, num - 1, -1):  # right→left!
+            dp[t] += dp[t - num]
+    return dp[target]
+
+print(can_partition([1,5,11,5], 11))  # True
+print(count_ways([1,2,3], 4))         # 4
+# (1+1+2, 1+3, 1+1+1+1, 2+2)
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ROOT["dp[0..W] = [T,F,F,F,F,F]"]
+    ROOT --> R1["After num=1<br/>[T,T,F,F,F,F]"]
+    R1 --> R2["After num=5<br/>[T,T,F,F,F,T,T]"]
+    R2 --> R3["After num=11<br/>[T,T,F,F,F,T,T,...,T]"]
+    R3 --> DONE(["dp[11] = True ✅"])
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef done fill:#1a6b3c,stroke:none,color:#fff
+    class ROOT,R1,R2,R3 step
+    class DONE done
+```
+:::
+
+::: {.fragment}
+**Key insight:** iterate `target` in **reverse** direction to prevent using the same item twice (0/1 constraint).
+:::
+:::
+:::
+
+---
+
+## Pattern 17 — Backtracking {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Explore **all possibilities** by building candidates incrementally and **abandoning** (backtracking) as soon as a constraint is violated.
+
+::: {.fragment}
+**Signal words:** *all subsets, all permutations, combinations, N-Queens, Sudoku, word search*
+
+```{.python code-line-numbers="1-5|7-18"}
+# ── Template
+def backtrack(path, choices):
+    if <is_solution>:
+        result.append(list(path)); return
+    for choice in choices:
+        if <is_valid(choice)>:
+            path.append(choice)        # make choice
+            backtrack(path, next_choices)
+            path.pop()                 # undo choice
+
+# ── All subsets of nums
+def subsets(nums):
+    result, path = [], []
+    def bt(start):
+        result.append(list(path))
+        for i in range(start, len(nums)):
+            path.append(nums[i]); bt(i + 1); path.pop()
+    bt(0)
+    return result   # 2^n subsets
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ROOT(["[]"]) --> A(["[1]"])
+    ROOT --> B(["[2]"])
+    ROOT --> C(["[3]"])
+    A --> AB(["[1,2]"])
+    A --> AC(["[1,3]"])
+    AB --> ABC(["[1,2,3]"])
+    B --> BC(["[2,3]"])
+    classDef node fill:#0f3460,stroke:#e94560,color:#fff
+    classDef leaf fill:#1a6b3c,stroke:none,color:#fff
+    class ROOT,A,B,C node
+    class AB,AC,ABC,BC leaf
+```
+:::
+
+::: {.fragment}
+| Problem | Pruning condition |
+|---|---|
+| Subsets | none (explore all) |
+| Permutations | skip already used |
+| Combinations of sum | `remaining < 0` |
+| N-Queens | row/col/diag conflict |
+:::
+:::
+:::
+
+---
+
+## Pattern 18 — K-way Merge {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Merge **K sorted lists** (or arrays) using a **min-heap** that always yields the globally smallest element next.
+
+::: {.fragment}
+**Signal words:** *merge K sorted lists/arrays, smallest range covering K lists, K closest elements*
+
+```{.python code-line-numbers="1-5|7-19"}
+import heapq
+
+class ListNode:
+    def __init__(self, val=0, nxt=None):
+        self.val = val; self.next = nxt
+
+def merge_k_lists(lists):
+    heap = []
+    # seed with head of each list
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.val, i, node))
+
+    dummy = cur = ListNode(0)
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        cur.next = node
+        cur      = cur.next
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+
+    return dummy.next
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph "3 sorted lists → min-heap"
+        L1["List 1: 1→4→7"]
+        L2["List 2: 2→5→8"]
+        L3["List 3: 3→6→9"]
+    end
+    HEAP["Min-Heap<br/>[(1,L1),(2,L2),(3,L3)]"]
+    HEAP --> POP1["pop 1 → push 4<br/>[(2,L2),(3,L3),(4,L1)]"]
+    POP1 --> POP2["pop 2 → push 5<br/>[(3,L3),(4,L1),(5,L2)]"]
+    POP2 --> OUT(["Output: 1→2→3→4→5→6→7→8→9"])
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef out  fill:#1a6b3c,stroke:none,color:#fff
+    class L1,L2,L3,HEAP,POP1,POP2 step
+    class OUT out
+```
+:::
+
+::: {.fragment}
+| Operation | Time |
+|---|---|
+| Build initial heap | O(K) |
+| Each element | O(log K) |
+| **Total** | **O(N log K)** |
+
+*N = total elements across all lists*
+:::
+:::
+:::
+
+---
+
+## Pattern Recognition Cheatsheet {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Signal → Pattern
+
+| Signal words | Pattern |
+|---|---|
+| sorted array + pair/triplet | Two Pointers |
+| subarray / substring, contiguous | Sliding Window |
+| range sum, subarray sum = k | Prefix Sum |
+| linked list cycle / middle | Fast & Slow Pointers |
+| reverse a linked list | In-place Reversal |
+| K largest / K most frequent | Top-K + Heap |
+| stream median | Two Heaps |
+| overlapping intervals | Merge Intervals |
+| range [1..n], missing/dup | Cyclic Sort |
+| next greater / smaller | Monotonic Stack |
+:::
+
+::: {.column width="50%"}
+### Signal → Pattern (continued)
+
+| Signal words | Pattern |
+|---|---|
+| sorted/rotated, find condition | Modified Binary Search |
+| level by level, BFS on tree | Tree BFS |
+| path sum, depth, LCA | Tree DFS |
+| prerequisites, build order | Topological Sort |
+| connected components, union | Union-Find |
+| take/skip item, subset sum | 0/1 Knapsack DP |
+| all permutations/subsets/combos | Backtracking |
+| K sorted lists, K-way merge | K-way Merge Heap |
+
+::: {.fragment}
+::: {.callout-tip}
+Read the problem → identify signal words → pick pattern → adapt template → optimise.
+:::
+:::
+:::
+:::
+
+---
+
+## Interview & Practice — Overview {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 55, 'nodeSpacing': 35}}}%%
+graph LR
+    INT["🎯 DSA Interview<br/>& Practice"] --> PREP["📚 Preparation<br/>Strategy"]
+    INT --> SOLVE["🧩 Problem-Solving<br/>Framework"]
+    INT --> TYPES["📋 Question<br/>Categories"]
+    INT --> TIPS["💡 Tips &<br/>Common Mistakes"]
+    INT --> PRAC["🏋️ Practice<br/>Resources"]
+    PREP --> P1["Study by Pattern<br/>not by problem"]
+    PREP --> P2["Spaced Repetition<br/>revisit weekly"]
+    SOLVE --> S1["UMPIRE Method"]
+    SOLVE --> S2["Complexity<br/>Analysis habit"]
+    TYPES --> T1["Easy / Medium / Hard<br/>Tiered progression"]
+    TYPES --> T2["30 must-know<br/>problems"]
+    TIPS --> TI1["Communicate<br/>while coding"]
+    TIPS --> TI2["Edge cases<br/>checklist"]
+    PRAC --> PR1["LeetCode<br/>HackerRank<br/>NeetCode"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef cat  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef leaf fill:#16213e,stroke:#555,color:#ccc
+    class INT root
+    class PREP,SOLVE,TYPES,TIPS,PRAC cat
+    class P1,P2,S1,S2,T1,T2,TI1,TI2,PR1 leaf
+```
+
+---
+
+## The UMPIRE Problem-Solving Framework {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+A structured 6-step method for tackling any DSA problem under interview pressure.
+
+::: {.fragment}
+| Step | Action |
+|---|---|
+| **U** — Understand | Restate the problem; ask clarifying questions |
+| **M** — Match | Identify pattern / data structure |
+| **P** — Plan | Write pseudocode; think aloud |
+| **I** — Implement | Code cleanly, name variables well |
+| **R** — Review | Trace through example; fix bugs |
+| **E** — Evaluate | State time and space complexity |
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+Spend **30–40 % of your time** on U + M + P before writing a single line of code.
+:::
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    U["🔍 Understand<br/>Clarify constraints,<br/>confirm examples"] --> M["🗂 Match<br/>Which pattern fits?<br/>Which data structure?"]
+    M --> P["📝 Plan<br/>Pseudocode first,<br/>think edge cases"]
+    P --> I["💻 Implement<br/>Clean code, modular<br/>functions"]
+    I --> R["🔄 Review<br/>Trace with example,<br/>fix off-by-ones"]
+    R --> E["⏱ Evaluate<br/>State O(time) + O(space)<br/>Discuss trade-offs"]
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    class U,M,P,I,R,E step
+```
+:::
+:::
+:::
+
+---
+
+## Interview Question Categories {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'rankSpacing': 50}}}%%
+graph LR
+    Q["Interview<br/>Question Types"] --> ARR["🟢 Arrays &<br/>Strings"]
+    Q --> LL["🟢 Linked<br/>Lists"]
+    Q --> STQ["🟡 Stacks &<br/>Queues"]
+    Q --> HT["🟡 Hash Maps<br/>& Sets"]
+    Q --> TR["🟡 Trees &<br/>BST"]
+    Q --> GR["🔴 Graphs"]
+    Q --> DP["🔴 Dynamic<br/>Programming"]
+    Q --> BS["🟡 Binary<br/>Search"]
+    Q --> HP["🟡 Heaps &<br/>Priority Q"]
+    Q --> BT["🔴 Backtracking"]
+    ARR --> A1["Two Sum · Best Time<br/>to Buy Stock · Kadane"]
+    LL  --> L1["Reverse · Merge<br/>Sorted · Cycle Detect"]
+    STQ --> SQ1["Valid Parentheses<br/>Min Stack · LRU Cache"]
+    HT  --> H1["Group Anagrams<br/>Top K · Subarray Sum=K"]
+    TR  --> T1["Max Depth · LCA<br/>Validate BST · Diameter"]
+    GR  --> G1["Islands · Clone Graph<br/>Course Schedule · Dijkstra"]
+    DP  --> D1["Climb Stairs · House Robber<br/>Coin Change · LCS"]
+    BS  --> B1["Search Rotated · Median<br/>of Two Arrays · Koko"]
+    HP  --> HP1["K Closest · Task Sched.<br/>Find Median Stream"]
+    BT  --> BT1["Subsets · Permutations<br/>Word Search · N-Queens"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef cat  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef prb  fill:#16213e,stroke:#555,color:#ccc
+    class Q root
+    class ARR,LL,STQ,HT,TR,GR,DP,BS,HP,BT cat
+    class A1,L1,SQ1,H1,T1,G1,D1,B1,HP1,BT1 prb
+```
+
+---
+
+## 30 Must-Know Interview Problems {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Arrays & Strings
+| # | Problem | Pattern | Difficulty |
+|---|---|---|---|
+| 1 | Two Sum | Hash Map | 🟢 Easy |
+| 2 | Best Time to Buy & Sell Stock | Sliding Window | 🟢 Easy |
+| 3 | Contains Duplicate | Hash Set | 🟢 Easy |
+| 4 | Product of Array Except Self | Prefix/Suffix | 🟡 Medium |
+| 5 | Maximum Subarray (Kadane) | DP / Greedy | 🟡 Medium |
+| 6 | Longest Substring No Repeat | Sliding Window | 🟡 Medium |
+| 7 | 3Sum | Two Pointers | 🟡 Medium |
+| 8 | Trapping Rain Water | Monotonic Stack | 🔴 Hard |
+
+### Linked Lists
+| # | Problem | Pattern | Difficulty |
+|---|---|---|---|
+| 9 | Reverse Linked List | In-place Reversal | 🟢 Easy |
+| 10 | Merge Two Sorted Lists | Two Pointers | 🟢 Easy |
+| 11 | Linked List Cycle | Fast & Slow | 🟢 Easy |
+| 12 | Remove Nth From End | Fast & Slow | 🟡 Medium |
+| 13 | Merge K Sorted Lists | K-way Merge | 🔴 Hard |
+:::
+
+::: {.column width="50%"}
+### Trees & Graphs
+| # | Problem | Pattern | Difficulty |
+|---|---|---|---|
+| 14 | Maximum Depth of Binary Tree | Tree DFS | 🟢 Easy |
+| 15 | Invert Binary Tree | Tree DFS | 🟢 Easy |
+| 16 | Validate BST | Tree DFS | 🟡 Medium |
+| 17 | LCA of Binary Tree | Tree DFS | 🟡 Medium |
+| 18 | Binary Tree Level Order | Tree BFS | 🟡 Medium |
+| 19 | Number of Islands | BFS / DFS | 🟡 Medium |
+| 20 | Course Schedule | Topological Sort | 🟡 Medium |
+| 21 | Clone Graph | BFS / DFS | 🟡 Medium |
+
+### Dynamic Programming
+| # | Problem | Pattern | Difficulty |
+|---|---|---|---|
+| 22 | Climbing Stairs | DP (Fibonacci) | 🟢 Easy |
+| 23 | House Robber | DP (1D) | 🟡 Medium |
+| 24 | Coin Change | DP (Unbounded KS) | 🟡 Medium |
+| 25 | Longest Common Subsequence | DP (2D) | 🟡 Medium |
+| 26 | Word Break | DP + Hash Set | 🟡 Medium |
+| 27 | Unique Paths | DP (Grid) | 🟡 Medium |
+| 28 | Jump Game II | Greedy | 🟡 Medium |
+| 29 | Median of Two Sorted Arrays | Binary Search | 🔴 Hard |
+| 30 | N-Queens | Backtracking | 🔴 Hard |
+:::
+:::
+
+---
+
+## Worked Example — Two Sum {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Problem:** Given an array `nums` and `target`, return indices of two numbers that add to `target`. Assume exactly one solution.
+
+::: {.fragment}
+**U — Understand:**  
+Input: `nums=[2,7,11,15]`, `target=9`  
+Output: `[0,1]` (since `2+7=9`)  
+Constraints: no same element twice  
+
+**M — Match:** complement lookup → **Hash Map**
+
+**P — Plan:** for each `num`, check if `target - num` seen before
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-8|10-12"}
+# O(n) time · O(n) space
+def two_sum(nums, target):
+    seen = {}                   # val → index
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+
+nums = [2, 7, 11, 15]
+print(two_sum(nums, 9))         # [0, 1]
+print(two_sum([3, 2, 4], 6))    # [1, 2]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    S["i=0  num=2<br/>complement=9-2=7<br/>7 in seen? NO<br/>store seen[2]=0"]
+    S --> S2["i=1  num=7<br/>complement=9-7=2<br/>2 in seen? YES ✅<br/>return [seen[2], 1] = [0,1]"]
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef hit  fill:#1a6b3c,stroke:none,color:#fff
+    class S step
+    class S2 hit
+```
+:::
+
+::: {.fragment}
+**E — Evaluate:**
+
+| Approach | Time | Space |
+|---|---|---|
+| Brute force (nested) | O(n²) | O(1) |
+| Sorting + two ptr | O(n log n) | O(1) |
+| **Hash map (optimal)** | **O(n)** | **O(n)** |
+:::
+:::
+:::
+
+---
+
+## Worked Example — Maximum Subarray (Kadane's) {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Problem:** Find the contiguous subarray with the **largest sum**.
+
+::: {.fragment}
+**U — Understand:**  
+Input: `[-2,1,-3,4,-1,2,1,-5,4]`  
+Output: `6` (subarray `[4,-1,2,1]`)
+
+**M — Match:** keep running sum, reset if negative → **Greedy / Kadane's DP**
+
+**P — Plan:**  
+`curr` = max subarray ending here  
+`best` = global max
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-6|8-10"}
+def max_subarray(nums):
+    curr = best = nums[0]
+    for num in nums[1:]:
+        curr = max(num, curr + num)  # extend or restart
+        best = max(best, curr)
+    return best
+
+nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+print(max_subarray(nums))   # 6
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "Kadane trace"
+        direction TB
+        R0["-2  curr=-2  best=-2"]
+        R0 --> R1["1   curr=1   best=1"]
+        R1 --> R2["-3  curr=-2  best=1"]
+        R2 --> R3["4   curr=4   best=4"]
+        R3 --> R4["-1  curr=3   best=4"]
+        R4 --> R5["2   curr=5   best=5"]
+        R5 --> R6["1   curr=6   best=6 ✅"]
+        R6 --> R7["-5  curr=1   best=6"]
+        R7 --> R8["4   curr=5   best=6"]
+    end
+    classDef row  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef best fill:#1a6b3c,stroke:none,color:#fff
+    class R0,R1,R2,R3,R4,R5,R7,R8 row
+    class R6 best
+```
+:::
+:::
+:::
+
+---
+
+## Worked Example — Validate BST {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Problem:** Given a binary tree root, determine if it is a valid Binary Search Tree.
+
+::: {.fragment}
+**U — Understand:**  
+Every node must satisfy **min < node.val < max** where the bounds tighten as we recurse.
+
+**M — Match:** recurse with bounds → **Tree DFS with range**
+
+**P — Plan:**  
+Pass `(node, min_bound, max_bound)` down. At each node check `min < val < max`, then recurse left with `max=val` and right with `min=val`.
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-9"}
+def is_valid_bst(root):
+    def dfs(node, lo, hi):
+        if not node:
+            return True
+        if not (lo < node.val < hi):
+            return False
+        return (dfs(node.left,  lo,       node.val) and
+                dfs(node.right, node.val, hi))
+    return dfs(root, float('-inf'), float('inf'))
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    R["5<br/>(-∞, +∞) ✅"] --> L["3<br/>(-∞, 5) ✅"]
+    R --> RI["7<br/>(5, +∞) ✅"]
+    L --> LL["1<br/>(-∞, 3) ✅"]
+    L --> LR["4<br/>(3, 5) ✅"]
+    RI --> RL["6<br/>(5, 7) ✅"]
+    RI --> RR["9<br/>(7, +∞) ✅"]
+    classDef ok   fill:#1a6b3c,stroke:none,color:#fff
+    classDef fail fill:#7a1a1a,stroke:none,color:#fff
+    class R,L,RI,LL,LR,RL,RR ok
+```
+:::
+
+::: {.fragment}
+::: {.callout-warning}
+**Common mistake:** only checking left child < root < right child is **wrong** — a node deep in the left subtree could still violate the global BST property.
+:::
+:::
+:::
+:::
+
+---
+
+## Worked Example — Coin Change {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Problem:** Given coin denominations and an `amount`, return the **fewest coins** needed, or `-1` if impossible.
+
+::: {.fragment}
+**U — Understand:**  
+`coins=[1,5,11]`, `amount=15` → `3` (5+5+5)  
+`coins=[2]`, `amount=3` → `-1`
+
+**M — Match:** min coins to reach each sub-amount → **Unbounded Knapsack DP**
+
+**P — Plan:**  
+`dp[i]` = minimum coins to make amount `i`.  
+For each coin, update `dp[i] = min(dp[i], dp[i-coin]+1)`
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-8|10-11"}
+def coin_change(coins, amount):
+    INF = float('inf')
+    dp  = [INF] * (amount + 1)
+    dp[0] = 0                       # 0 coins for amount 0
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] = min(dp[i], dp[i - coin] + 1)
+    return dp[amount] if dp[amount] != INF else -1
+
+print(coin_change([1, 5, 11], 15))  # 3  (5+5+5)
+print(coin_change([2], 3))          # -1
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph "dp build for coins=[1,5,11], amount=7"
+        direction TB
+        D0["dp[0]=0"]
+        D1["dp[1]=1"]
+        D2["dp[2]=2"]
+        D3["dp[3]=3"]
+        D4["dp[4]=4"]
+        D5["dp[5]=1  (coin 5)"]
+        D6["dp[6]=2"]
+        D7["dp[7]=3 ✅"]
+    end
+    classDef base fill:#e94560,stroke:none,color:#fff
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    classDef ans  fill:#1a6b3c,stroke:none,color:#fff
+    class D0 base
+    class D1,D2,D3,D4,D5,D6 step
+    class D7 ans
+```
+:::
+:::
+:::
+
+---
+
+## Worked Example — Number of Islands {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Problem:** Count connected groups of `'1'`s (land) in a 2D grid of `'1'`s and `'0'`s.
+
+::: {.fragment}
+**M — Match:** count connected components → **DFS flood-fill**
+
+**P — Plan:** iterate grid; when `'1'` found, DFS to mark the whole island as visited (`'0'`), increment counter.
+:::
+
+::: {.fragment}
+```{.python code-line-numbers="1-4|6-15|17-20"}
+def num_islands(grid):
+    if not grid: return 0
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows: return
+        if c < 0 or c >= cols: return
+        if grid[r][c] != '1':  return
+        grid[r][c] = '0'               # mark visited
+        dfs(r+1,c); dfs(r-1,c)
+        dfs(r,c+1); dfs(r,c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                dfs(r, c)              # flood fill
+                count += 1
+    return count
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph "Grid"
+        direction LR
+        G["1 1 0 0 0<br/>1 1 0 0 0<br/>0 0 1 0 0<br/>0 0 0 1 1"]
+    end
+    I1(["Island 1<br/>top-left cluster"])
+    I2(["Island 2<br/>center"])
+    I3(["Island 3<br/>bottom-right"])
+    G --> I1 & I2 & I3
+    ANS(["count = 3"])
+    I1 & I2 & I3 --> ANS
+    classDef isl fill:#0f3460,stroke:#e94560,color:#fff
+    classDef ans fill:#1a6b3c,stroke:none,color:#fff
+    class I1,I2,I3 isl
+    class ANS ans
+```
+:::
+
+::: {.fragment}
+**E — Evaluate:**  
+Time: **O(m × n)** — each cell visited at most once  
+Space: **O(m × n)** — recursion stack in worst case (all land)
+:::
+:::
+:::
+
+---
+
+## Common Interview Mistakes {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Code-Level Mistakes
+
+::: {.fragment}
+| Mistake | Fix |
+|---|---|
+| Off-by-one in binary search | Use `lo <= hi`; `mid = (lo+hi)//2` |
+| Forgetting base case in recursion | Always handle `None` / empty first |
+| Mutating input array silently | Ask interviewer; work on copy if needed |
+| Using list instead of set for membership | `x in set` = O(1) vs `x in list` = O(n) |
+| Nested loop when hash map works | Ask: can we trade space for time? |
+| Integer overflow (Python exempt) | Note for Java/C++ — use `long` |
+| `sort()` vs `sorted()` | `sort()` mutates; `sorted()` returns new |
+:::
+:::
+
+::: {.column width="50%"}
+### Interview-Level Mistakes
+
+::: {.fragment}
+| Mistake | Fix |
+|---|---|
+| Jumping straight to code | Spend time on U + M + P first |
+| Silent coding | Talk through every decision |
+| No edge-case discussion | Always ask: empty input? negatives? duplicates? |
+| Forgetting to state complexity | Always end with O(time) + O(space) |
+| One approach only | Mention brute force, then optimise |
+| Giving up too fast | Verbalise what you know; ask for hint |
+| Untested code | Trace through at least one example |
+:::
+
+::: {.fragment}
+::: {.callout-tip}
+Interviewers care more about **how you think** than whether you get the perfect answer.
+:::
+:::
+:::
+:::
+
+---
+
+## Edge Case Checklist {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Arrays / Strings
+- Empty array or string
+- Single element
+- All identical elements
+- Already sorted / reverse sorted
+- Negative numbers
+- Integer overflow (`2^31 - 1`)
+- Duplicate values
+
+### Linked Lists
+- `None` / empty list
+- Single node
+- Two nodes (swap edge case)
+- Cycle in list
+- Head is the answer
+
+### Trees
+- `None` root
+- Single node (root only)
+- Skewed tree (all left or all right)
+- All same values
+- Negative node values
+:::
+
+::: {.column width="50%"}
+### Graphs
+- Disconnected components
+- Self-loops
+- Cycle detection
+- Directed vs undirected
+- Negative edge weights (Dijkstra fails)
+
+### Dynamic Programming
+- `amount = 0` (base case)
+- `n = 0` or `n = 1`
+- No valid solution exists
+- Large inputs — check recursion depth
+
+### Strings
+- Uppercase + lowercase mixed
+- Unicode / special characters
+- Palindrome with even/odd length
+- Empty string
+
+::: {.fragment}
+::: {.callout-warning}
+Always **explicitly state** which edge cases you're handling. Even if your code handles them implicitly, verbalising shows thoroughness.
+:::
+:::
+:::
+:::
+
+---
+
+## Time & Space Trade-offs {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+Most interview optimisations follow one of three patterns:
+
+::: {.fragment}
+### 1. Space for Speed
+Use extra memory (hash map, set, prefix array) to reduce time.
+
+```python
+# O(n²) → O(n) with hash map
+def two_sum_brute(nums, t):        # O(n²)
+    for i in range(len(nums)):
+        for j in range(i+1, len(nums)):
+            if nums[i]+nums[j] == t: return [i,j]
+
+def two_sum_hash(nums, t):         # O(n) time, O(n) space
+    seen = {}
+    for i, n in enumerate(nums):
+        if t - n in seen: return [seen[t-n], i]
+        seen[n] = i
+```
+:::
+
+::: {.fragment}
+### 2. Pre-processing
+Sort or build prefix/suffix arrays once, then answer queries in O(1).
+:::
+
+::: {.fragment}
+### 3. Lazy evaluation
+Avoid computing things until needed (e.g., short-circuit OR/AND chains).
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    OPT["Optimisation<br/>Strategy"]
+    OPT --> SP["🔄 Space-for-Speed<br/>Hash Map · Memo · Prefix Sum<br/>O(n) space → O(n) time"]
+    OPT --> PRE["⚙️ Pre-processing<br/>Sort once → binary search<br/>Build index → O(1) query"]
+    OPT --> LAZ["⏳ Lazy / Early Exit<br/>Short-circuit conditions<br/>Break on first match"]
+    OPT --> DC["✂️ Divide & Reduce<br/>Binary search eliminates half<br/>DP reuses subproblem results"]
+    classDef root fill:#e94560,stroke:none,color:#fff
+    classDef strat fill:#0f3460,stroke:#e94560,color:#fff
+    class OPT root
+    class SP,PRE,LAZ,DC strat
+```
+:::
+:::
+:::
+
+---
+
+## Practice Resources & Study Plan {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### Recommended Resources
+
+| Resource | Best For |
+|---|---|
+| **NeetCode 150** | Curated 150 problems by pattern |
+| **LeetCode** | Full problem bank, contests |
+| **HackerRank** | Structured learning tracks |
+| **AlgoExpert** | Video explanations |
+| **Grokking the Coding Interview** | Pattern-based learning |
+| **CLRS (Introduction to Algorithms)** | Deep theory |
+| **Python DSA (this deck!)** | Visual pattern reference |
+
+### Python-specific Tools
+
+```python
+import heapq          # priority queue
+from collections import (
+    deque,            # O(1) both ends
+    defaultdict,      # auto-init dict
+    Counter,          # frequency count
+    OrderedDict,      # insertion order
+)
+from functools import lru_cache  # memoisation
+import bisect         # binary search on sorted list
+```
+:::
+
+::: {.column width="50%"}
+### 12-Week Study Plan
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+gantt
+    dateFormat  YYYY-MM-DD
+    title 12-Week DSA Study Plan
+    axisFormat  Week %U
+
+    section Foundations
+    Big-O + Arrays + Strings    :done,  w1, 2024-01-01, 1w
+    Linked Lists + Two Pointers :done,  w2, after w1, 1w
+    Stacks + Queues + Sliding W :done,  w3, after w2, 1w
+
+    section Intermediate
+    Hash Maps + Sets            :active, w4, after w3, 1w
+    Trees + BST + BFS/DFS       :        w5, after w4, 2w
+    Heaps + Top-K + Two Heaps   :        w7, after w5, 1w
+
+    section Advanced
+    Graphs + BFS/DFS/Topo Sort  :        w8, after w7, 1w
+    Binary Search Patterns      :        w9, after w8, 1w
+    Dynamic Programming         :        w10, after w9, 2w
+
+    section Mock Interviews
+    Backtracking + Revisions    :        w12, after w10, 1w
+```
+:::
+:::
+
+---
+
+## Interview Complexity Quick-Reference {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+### "What complexity is expected?"
+
+| Input Size *n* | Expected Complexity |
+|---|---|
+| n ≤ 10 | O(n!) — backtracking OK |
+| n ≤ 20 | O(2ⁿ) — bitmask DP OK |
+| n ≤ 100 | O(n³) |
+| n ≤ 1,000 | O(n²) |
+| n ≤ 100,000 | O(n log n) |
+| n ≤ 1,000,000 | O(n) or O(n log n) |
+| n > 10,000,000 | O(log n) or O(1) |
+
+::: {.fragment}
+::: {.callout-tip}
+Use the **input constraint** to reverse-engineer the expected algorithm. If `n ≤ 10^5`, you need O(n log n) or better.
+:::
+:::
+:::
+
+::: {.column width="50%"}
+### Python Gotchas in Interviews
+
+::: {.fragment}
+```python
+# ✅ Correct max-heap (negate values)
+import heapq
+h = []
+heapq.heappush(h, -val)
+top = -heapq.heappop(h)
+
+# ✅ Avoid TLE: use deque not list for queue
+from collections import deque
+q = deque(); q.popleft()  # O(1)
+# q = []; q.pop(0)        # O(n) ❌
+
+# ✅ sys.setrecursionlimit for deep recursion
+import sys; sys.setrecursionlimit(10_000)
+
+# ✅ lru_cache for clean memoisation
+from functools import lru_cache
+@lru_cache(None)
+def dp(i, j): ...
+
+# ✅ Sort by custom key
+intervals.sort(key=lambda x: x[0])
+```
+:::
+:::
+:::
+
+---
+
+## Final Tips — Acing the DSA Interview {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+::: {.fragment}
+### Before the Interview
+- Solve **2–3 problems/day** in timed conditions
+- Review solutions even when correct — are there better approaches?
+- Practise on **whiteboard / plain editor** (no autocomplete)
+- Mock interview with a partner weekly
+:::
+
+::: {.fragment}
+### During the Interview
+1. **Listen carefully** — constraints are hints
+2. **Clarify** before coding (`null` inputs? return type?)
+3. **Think out loud** — narrate every step
+4. **Start simple** — brute force first, then optimise
+5. **Test before claiming done** — trace with examples
+6. **State complexity** — always O(time) and O(space)
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    HEAR["Hear problem"] --> RESTATE["Restate in own words"]
+    RESTATE --> EDGE["Identify edge cases"]
+    EDGE --> BRUTE["State brute-force<br/> complexity"]
+    BRUTE --> OPT["Optimise<br/>(pattern match)"]
+    OPT --> CODE["Code cleanly"]
+    CODE --> TRACE["Trace example"]
+    TRACE --> COMPLEX["State O(time)+O(space)"]
+    COMPLEX --> IMPROVE["Discuss further improvements"]
+    classDef step fill:#0f3460,stroke:#e94560,color:#fff
+    class HEAR,RESTATE,EDGE,BRUTE,OPT,CODE,TRACE,COMPLEX,IMPROVE step
+```
+:::
+
+::: {.fragment}
+> **"It's not just about getting the right answer — it's about demonstrating clear, structured thinking under pressure."**
+:::
+:::
+:::

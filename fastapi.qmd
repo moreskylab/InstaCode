@@ -1,0 +1,2021 @@
+---
+title: "FastAPI"
+subtitle: "Modern, Fast, Async Python Web APIs"
+author: "Python with FastAPI"
+date: today
+format:
+  revealjs:
+    theme: [dark, custom.scss]
+    highlight-style: monokai
+    filters:
+      - code-fullscreen
+    transition: slide
+    slide-number: true
+    chalkboard: false
+    footer: "FastAPI — Complete Guide"
+    progress: true
+    code-fold: false
+    code-line-numbers: true
+    code-overflow: wrap
+    incremental: false
+    width: 1280
+    height: 720
+    margin: 0.05
+    center: false
+  pptx:
+    mermaid-format: png
+mermaid:
+  theme: dark
+
+execute:
+  echo: false
+  eval: true
+---
+
+## What is FastAPI? {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**FastAPI** is a modern, high-performance Python web framework for building **APIs** with Python type hints.
+
+<br>
+
+::: {.fragment}
+**Core Philosophy**
+
+- **Fast to run** — one of the fastest Python frameworks (NodeJS / Go level)
+- **Fast to code** — type hints + auto-completion reduce bugs by ~40%
+- **Standards-based** — OpenAPI, JSON Schema, OAuth2 out of the box
+:::
+
+::: {.fragment}
+**Created in 2018** by Sebastián Ramírez  
+Built on **Starlette** (ASGI) and **Pydantic** (data validation)  
+Fully **async/await** native
+:::
+
+::: {.fragment}
+**Used by:** Microsoft, Uber, Netflix, Apple, NASA, Explosion AI
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+mindmap
+  root((FastAPI))
+    Performance
+      Async/Await
+      ASGI
+      Starlette
+    Validation
+      Pydantic v2
+      Type Hints
+      JSON Schema
+    API Docs
+      Swagger UI
+      ReDoc
+      OpenAPI 3
+    Features
+      Dependency Injection
+      OAuth2/JWT
+      WebSockets
+      Background Tasks
+```
+:::
+:::
+:::
+
+---
+
+## FastAPI vs Other Frameworks {.scrollable background-color="#16213e"}
+
+| Feature | FastAPI | Django REST | Flask | Express (Node) |
+|---|---|---|---|---|
+| Type | Async API | Full-stack | Micro | Micro |
+| Performance | ⚡ Excellent | Good | Good | Excellent |
+| Async Native | ✅ Yes | Partial | ❌ No | ✅ Yes |
+| Auto API Docs | ✅ Built-in | ❌ Manual | ❌ Manual | ❌ Manual |
+| Data Validation | ✅ Pydantic | DRF Serializers | 3rd-party | 3rd-party |
+| Type Safety | ✅ Full | Partial | ❌ None | Partial (TS) |
+| Learning Curve | Low | Medium | Low | Low |
+| ORM | 3rd-party | Built-in | 3rd-party | 3rd-party |
+
+::: {.fragment}
+> **Choose FastAPI** when building APIs, microservices, or any service where performance, type safety, and auto-generated documentation matter.
+:::
+
+---
+
+## Architecture Overview {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'orthogonal'}}}%%
+graph TD
+    CLIENT["🌐 Client"] -->|HTTP Request| ASGI
+    ASGI["⚡ ASGI Server<br/>(Uvicorn / Hypercorn)"] --> MW
+    MW["🛡️ Middleware Stack"] --> ROUTER
+    ROUTER["🔀 APIRouter<br/>(path matching)"] --> DEP
+    DEP["💉 Dependency<br/>Injection"] --> VIEW
+    VIEW["⚙️ Path Operation<br/>Function"] --> PYDANTIC
+    PYDANTIC["✅ Pydantic<br/>(request validation)"] --> VIEW
+    VIEW --> DB["🗄️ Database/<br/>External Services"]
+    DB --> VIEW
+    VIEW --> RESP["📦 Response<br/>(Pydantic serialization)"]
+    RESP --> CLIENT
+
+    classDef client  fill:#e94560,stroke:none,color:#fff
+    classDef asgi    fill:#533483,stroke:none,color:#fff
+    classDef core    fill:#0f3460,stroke:#e94560,color:#fff
+    classDef data    fill:#16213e,stroke:#aaa,color:#ccc
+    class CLIENT client
+    class ASGI,MW asgi
+    class ROUTER,DEP,VIEW,PYDANTIC core
+    class DB,RESP data
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+**FastAPI's two foundation libraries:**
+
+**Starlette** — the ASGI web toolkit underneath:
+
+- Request/Response objects
+- Routing
+- Middleware
+- WebSockets
+- Background tasks
+- Static files
+:::
+
+::: {.fragment}
+**Pydantic v2** — the data layer:
+
+- Data validation via type hints
+- JSON Schema generation
+- Settings management
+- Auto-serialization of responses
+:::
+
+::: {.fragment}
+> FastAPI = Starlette + Pydantic + automatic OpenAPI generation
+:::
+:::
+:::
+
+---
+
+## Request–Response Lifecycle {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'sequence': {'mirrorActors': false}}}%%
+sequenceDiagram
+    participant C   as 🌐 Client
+    participant UV  as ⚡ Uvicorn (ASGI)
+    participant MW  as 🛡️ Middleware
+    participant R   as 🔀 Router
+    participant DI  as 💉 Dependency Injection
+    participant PV  as ⚙️ Path Operation
+    participant PD  as ✅ Pydantic
+    participant DB  as 🗄️ Database
+
+    C  ->> UV : HTTP Request
+    UV ->> MW : ASGI scope + receive
+    MW ->> R  : process_request()
+    R  ->> DI : route match → resolve dependencies
+    DI ->> PV : inject resolved deps into function
+    PV ->> PD : parse + validate path/query/body params
+    PD -->> PV: validated Python objects
+    PV ->> DB : async query (await db.execute(...))
+    DB -->> PV: result rows
+    PV -->> PD: serialize response model
+    PD -->> MW: validated JSON response
+    MW -->> UV: process_response()
+    UV -->> C : HTTP Response (JSON)
+```
+
+---
+
+## Project Structure {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+**Install & create**
+```bash
+pip install fastapi uvicorn[standard]
+pip install sqlalchemy alembic pydantic-settings
+```
+
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    ROOT["📁 myapp/"] --> MAIN["main.py"]
+    ROOT --> CORE["📁 core/"]
+    ROOT --> API["📁 api/"]
+    ROOT --> MODELS["📁 models/"]
+    ROOT --> SCHEMAS["📁 schemas/"]
+    ROOT --> CRUD["📁 crud/"]
+    ROOT --> DB["📁 db/"]
+    ROOT --> DEPS["dependencies.py"]
+    ROOT --> CONFIG["config.py"]
+    ROOT --> TESTS["📁 tests/"]
+
+    CORE --> SECURITY["security.py"]
+    CORE --> SETTINGS["settings.py"]
+    API  --> V1["📁 v1/"]
+    V1   --> USERS["users.py"]
+    V1   --> POSTS["posts.py"]
+    V1   --> AUTH["auth.py"]
+    DB   --> SESSION["session.py"]
+    DB   --> BASE["base.py"]
+
+    classDef file fill:#0f3460,stroke:#e94560,color:#fff
+    classDef dir  fill:#1a1a2e,stroke:#533483,color:#ccc
+    class MAIN,DEPS,CONFIG,SECURITY,SETTINGS,USERS,POSTS,AUTH,SESSION,BASE file
+    class ROOT,CORE,API,MODELS,SCHEMAS,CRUD,DB,V1,TESTS dir
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+**Key files explained:**
+
+| File / Dir | Purpose |
+|---|---|
+| `main.py` | App factory, routers, startup |
+| `core/settings.py` | Pydantic settings config |
+| `core/security.py` | JWT, hashing utilities |
+| `api/v1/` | Route handlers per resource |
+| `models/` | SQLAlchemy ORM models |
+| `schemas/` | Pydantic request/response schemas |
+| `crud/` | Reusable DB access functions |
+| `db/session.py` | Async DB engine + session |
+| `dependencies.py` | Shared FastAPI dependencies |
+| `tests/` | pytest test suite |
+:::
+:::
+:::
+
+---
+
+## Your First FastAPI App {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# main.py
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: initialise DB pool, load ML models, etc.
+    print("Starting up...")
+    yield
+    # Shutdown: close connections, flush cache
+    print("Shutting down...")
+
+app = FastAPI(
+    title="My Blog API",
+    description="A blog API built with FastAPI",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Include routers
+from api.v1 import posts, users, auth
+app.include_router(auth.router,  prefix="/api/v1/auth",  tags=["Auth"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(posts.router, prefix="/api/v1/posts", tags=["Posts"])
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok"}
+```
+
+::: {.fragment}
+```bash
+# Run the development server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Auto-generated docs available at:
+# http://localhost:8000/docs    ← Swagger UI
+# http://localhost:8000/redoc  ← ReDoc
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    APP["FastAPI app"] --> STARTUP["lifespan startup<br/>(DB pool, ML models)"]
+    APP --> ROUTERS["include_router()<br/>/api/v1/auth<br/>/api/v1/users<br/>/api/v1/posts"]
+    APP --> DOCS["Auto-generated Docs<br/>/docs → Swagger UI<br/>/redoc → ReDoc<br/>/openapi.json"]
+    APP --> SHUTDOWN["lifespan shutdown<br/>(close connections)"]
+
+    classDef root  fill:#e94560,stroke:none,color:#fff
+    classDef node  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef doc   fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class APP root
+    class STARTUP,ROUTERS,SHUTDOWN node
+    class DOCS doc
+```
+:::
+
+::: {.fragment}
+> FastAPI runs on **ASGI** — Unlike WSGI (Django, Flask), ASGI supports true async I/O, WebSockets, and HTTP/2.
+:::
+:::
+:::
+
+---
+
+## Path Operations & Routing {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# api/v1/posts.py
+from fastapi import APIRouter, status
+
+router = APIRouter()
+
+# GET  /posts/            → list all posts
+@router.get("/", response_model=list[PostOut])
+async def list_posts(db: AsyncSession = Depends(get_db)):
+    return await crud.post.get_multi(db)
+
+# POST /posts/            → create a post
+@router.post("/", response_model=PostOut,
+             status_code=status.HTTP_201_CREATED)
+async def create_post(post: PostCreate,
+                      db: AsyncSession = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    return await crud.post.create(db, obj_in=post,
+                                   author_id=current_user.id)
+
+# GET  /posts/{post_id}  → get one post
+@router.get("/{post_id}", response_model=PostOut)
+async def get_post(post_id: int,
+                   db: AsyncSession = Depends(get_db)):
+    post = await crud.post.get(db, id=post_id)
+    if not post:
+        raise HTTPException(status_code=404,
+                            detail="Post not found")
+    return post
+
+# PATCH /posts/{post_id} → partial update
+@router.patch("/{post_id}", response_model=PostOut)
+async def update_post(post_id: int, post: PostUpdate,
+                      db: AsyncSession = Depends(get_db)):
+    return await crud.post.update(db, id=post_id, obj_in=post)
+
+# DELETE /posts/{post_id}
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(post_id: int,
+                      db: AsyncSession = Depends(get_db)):
+    await crud.post.remove(db, id=post_id)
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    ROUTER["APIRouter<br/>/posts"] --> GET_L["GET /<br/>list_posts()"]
+    ROUTER --> POST["POST /<br/>create_post()"]
+    ROUTER --> GET_D["GET /{post_id}<br/>get_post()"]
+    ROUTER --> PATCH["PATCH /{post_id}<br/>update_post()"]
+    ROUTER --> DELETE["DELETE /{post_id}<br/>delete_post()"]
+
+    classDef router fill:#e94560,stroke:none,color:#fff
+    classDef get    fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    classDef post_  fill:#533483,stroke:none,color:#fff
+    classDef update fill:#0f3460,stroke:#aaa,color:#fff
+    classDef del_   fill:#3d0a0a,stroke:#e94560,color:#fff
+    class ROUTER router
+    class GET_L,GET_D get
+    class POST post_
+    class PATCH update
+    class DELETE del_
+```
+:::
+
+::: {.fragment}
+**HTTP method decorators:**  
+`@router.get()` — read data  
+`@router.post()` — create data  
+`@router.put()` — full replace  
+`@router.patch()` — partial update  
+`@router.delete()` — remove  
+`@router.options()` — capability check  
+:::
+:::
+:::
+
+---
+
+## Path, Query & Header Parameters {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import APIRouter, Query, Path, Header
+from typing import Annotated
+
+router = APIRouter()
+
+# PATH PARAMETER — part of the URL
+# GET /posts/42
+@router.get("/{post_id}")
+async def get_post(
+    post_id: Annotated[int, Path(title="Post ID", ge=1)],
+):
+    ...
+
+# QUERY PARAMETERS — after the ?
+# GET /posts?skip=0&limit=10&status=published
+@router.get("/")
+async def list_posts(
+    skip:   Annotated[int, Query(ge=0, default=0)],
+    limit:  Annotated[int, Query(ge=1, le=100, default=10)],
+    status: Annotated[str | None, Query()] = None,
+    q:      Annotated[str | None, Query(min_length=3)] = None,
+):
+    ...
+
+# HEADER PARAMETERS
+@router.get("/protected")
+async def protected_route(
+    x_token: Annotated[str, Header()],
+    user_agent: Annotated[str | None, Header()] = None,
+):
+    if x_token != "secret-token":
+        raise HTTPException(status_code=403)
+    ...
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    URL["GET /posts/42?skip=0&limit=10<br/>Headers: X-Token: abc"] --> PATH["Path Params<br/>{post_id} = 42<br/>→ int, validated ≥ 1"]
+    URL --> QUERY["Query Params<br/>skip=0, limit=10<br/>→ validated, defaults applied"]
+    URL --> HEADER["Header Params<br/>X-Token: abc<br/>User-Agent: ..."]
+    PATH  --> FUNC["Path operation<br/>function receives<br/>typed Python values"]
+    QUERY --> FUNC
+    HEADER --> FUNC
+
+    classDef url    fill:#e94560,stroke:none,color:#fff
+    classDef param  fill:#533483,stroke:none,color:#fff
+    classDef func   fill:#0f3460,stroke:#aaa,color:#fff
+    class URL url
+    class PATH,QUERY,HEADER param
+    class FUNC func
+```
+:::
+
+::: {.fragment}
+**Validation constraints:**  
+`ge=1` — greater than or equal  
+`gt=0` — strictly greater  
+`le=100` — less than or equal  
+`lt=` — strictly less  
+`min_length=` — string min length  
+`max_length=` — string max length  
+`pattern=` — regex validation  
+:::
+:::
+:::
+
+---
+
+## Pydantic Schemas {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# schemas/post.py
+from pydantic import BaseModel, Field, field_validator
+from datetime import datetime
+from enum import Enum
+
+class PostStatus(str, Enum):
+    draft     = "draft"
+    published = "published"
+    archived  = "archived"
+
+# Base — shared fields
+class PostBase(BaseModel):
+    title:   str   = Field(..., min_length=5, max_length=200,
+                           description="Post title")
+    content: str   = Field(..., min_length=10)
+    status:  PostStatus = PostStatus.draft
+
+    @field_validator('title')
+    @classmethod
+    def title_must_not_be_empty(cls, v: str) -> str:
+        if v.strip() == '':
+            raise ValueError('Title cannot be blank')
+        return v.strip()
+
+# Create — what the client sends
+class PostCreate(PostBase):
+    category_id: int
+
+# Update — all fields optional for PATCH
+class PostUpdate(BaseModel):
+    title:    str | None       = None
+    content:  str | None       = None
+    status:   PostStatus | None = None
+
+# Out — what the API returns
+class PostOut(PostBase):
+    id:         int
+    author_id:  int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}  # ORM mode
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    BASE["PostBase<br/>title, content, status<br/>(shared validation)"]
+    BASE --> CREATE["PostCreate<br/>+ category_id<br/>(client → server)"]
+    BASE --> UPDATE["PostUpdate<br/>all fields Optional<br/>(PATCH body)"]
+    BASE --> OUT["PostOut<br/>+ id, author_id<br/>created_at, updated_at<br/>(server → client)"]
+
+    CREATE -->|"request body"| ENDPOINT["Path Operation<br/>Function"]
+    UPDATE -->|"request body"| ENDPOINT
+    ENDPOINT -->|"response"| OUT
+
+    classDef base   fill:#533483,stroke:none,color:#fff
+    classDef schema fill:#0f3460,stroke:#aaa,color:#fff
+    classDef ep     fill:#e94560,stroke:none,color:#fff
+    class BASE base
+    class CREATE,UPDATE,OUT schema
+    class ENDPOINT ep
+```
+:::
+
+::: {.fragment}
+**Pydantic v2 features used:**  
+`Field(...)` — required field (Ellipsis)  
+`Field(default=)` — optional with default  
+`@field_validator` — custom field logic  
+`model_config` — ORM mode, aliases  
+`model_json_schema()` — JSON Schema export  
+:::
+:::
+:::
+
+---
+
+## Pydantic Validation Pipeline {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import field_validator, Field
+from typing import Self
+
+class UserCreate(BaseModel):
+    username:         str      = Field(min_length=3, max_length=50)
+    email:            EmailStr
+    password:         str      = Field(min_length=8)
+    password_confirm: str
+
+    @field_validator('username')
+    @classmethod
+    def username_alphanumeric(cls, v: str) -> str:
+        if not v.isalnum():
+            raise ValueError('Username must be alphanumeric')
+        return v.lower()
+
+    @field_validator('password')
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password needs an uppercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password needs a digit')
+        return v
+
+    @model_validator(mode='after')
+    def passwords_match(self) -> Self:
+        if self.password != self.password_confirm:
+            raise ValueError('Passwords do not match')
+        return self
+
+# FastAPI auto-returns 422 Unprocessable Entity on failure:
+# {
+#   "detail": [
+#     {"loc": ["body", "password"], "msg": "...", "type": "value_error"}
+#   ]
+# }
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    JSON["Raw JSON body<br/>from request"] --> PARSE["JSON → dict<br/>(type coercion)"]
+    PARSE --> FIELD_V["@field_validator<br/>per-field custom logic"]
+    FIELD_V --> MODEL_V["@model_validator<br/>cross-field logic"]
+    MODEL_V -->|"pass"| OBJ["Validated Python<br/>object (UserCreate)"]
+    MODEL_V -->|"fail"| ERR["422 Unprocessable Entity<br/>{detail: [{loc, msg, type}]}"]
+    OBJ --> FUNC["Path operation<br/>receives typed object"]
+
+    classDef input  fill:#e94560,stroke:none,color:#fff
+    classDef step   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef ok     fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    classDef fail   fill:#533483,stroke:none,color:#fff
+    class JSON,PARSE input
+    class FIELD_V,MODEL_V step
+    class OBJ,FUNC ok
+    class ERR fail
+```
+:::
+
+::: {.fragment}
+> FastAPI **automatically** returns 422 with detailed error info when Pydantic validation fails — no error handling code required.
+:::
+:::
+:::
+
+---
+
+## Response Models & Status Codes {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse, Response
+
+router = APIRouter()
+
+# response_model filters & validates the output
+@router.get("/{user_id}", response_model=UserOut)
+async def get_user(user_id: int, db=Depends(get_db)):
+    user = await crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404,
+                            detail="User not found")
+    return user  # SQLAlchemy ORM object → Pydantic serializes it
+
+# Custom status code
+@router.post("/", response_model=UserOut,
+             status_code=status.HTTP_201_CREATED)
+async def create_user(user: UserCreate, db=Depends(get_db)):
+    return await crud.user.create(db, obj_in=user)
+
+# Exclude fields from response
+@router.get("/me", response_model=UserOut,
+            response_model_exclude={"hashed_password", "is_superuser"})
+async def get_me(current_user=Depends(get_current_user)):
+    return current_user
+
+# 204 No Content — no response body
+@router.delete("/{user_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: int, db=Depends(get_db)):
+    await crud.user.remove(db, id=user_id)
+    return Response(status_code=204)
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    RETURN["return orm_object / dict"] --> RMODEL["response_model=UserOut<br/>(Pydantic)"]
+    RMODEL --> FILTER["Filter out<br/>excluded fields<br/>hashed_password, etc."]
+    FILTER --> VALIDATE["Validate /<br/>serialize to JSON"]
+    VALIDATE --> STATUS["Apply status_code<br/>200 / 201 / 204"]
+    STATUS --> RESP["JSON HTTP Response<br/>Content-Type: application/json"]
+
+    classDef step  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef resp  fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    classDef start fill:#e94560,stroke:none,color:#fff
+    class RETURN start
+    class RMODEL,FILTER,VALIDATE,STATUS step
+    class RESP resp
+```
+:::
+
+::: {.fragment}
+**Common status codes:**  
+`200 OK` — default, successful read  
+`201 Created` — successful creation  
+`204 No Content` — successful delete  
+`400 Bad Request` — client error  
+`401 Unauthorized` — not authenticated  
+`403 Forbidden` — not authorized  
+`404 Not Found` — resource missing  
+`422 Unprocessable Entity` — validation fail  
+:::
+:::
+:::
+
+---
+
+## Dependency Injection {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# dependencies.py
+from fastapi import Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from db.session import async_session_maker
+from core.security import decode_access_token
+from models.user import User
+import crud
+
+# ─── Database session dependency ───────────────────────────
+async def get_db() -> AsyncSession:
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+# ─── Current user dependency ───────────────────────────────
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+    user = await crud.user.get(db, id=payload["sub"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# ─── Admin-only dependency ─────────────────────────────────
+async def require_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Admin only")
+    return current_user
+
+# ─── Usage in path operation ───────────────────────────────
+@router.get("/admin/stats")
+async def admin_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    return await crud.get_stats(db)
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    PO["Path Operation<br/>admin_stats()"] -->|"Depends(get_db)"| DB["get_db()<br/>→ AsyncSession"]
+    PO -->|"Depends(require_admin)"| ADMIN["require_admin()"]
+    ADMIN -->|"Depends(get_current_user)"| AUTH["get_current_user()"]
+    AUTH  -->|"Depends(oauth2_scheme)"| TOKEN["OAuth2PasswordBearer<br/>→ JWT token string"]
+    AUTH  -->|"Depends(get_db)"| DB
+
+    classDef po    fill:#e94560,stroke:none,color:#fff
+    classDef dep   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef leaf  fill:#533483,stroke:none,color:#fff
+    class PO po
+    class ADMIN,AUTH dep
+    class DB,TOKEN leaf
+```
+:::
+
+::: {.fragment}
+**DI benefits in FastAPI:**
+- Automatic dependency resolution & caching
+- Dependencies can depend on other dependencies
+- Easy to swap for testing (`app.dependency_overrides`)
+- Shared resources (DB session, auth) defined once
+:::
+:::
+:::
+
+---
+
+## Authentication — OAuth2 & JWT {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# core/security.py
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordBearer
+
+SECRET_KEY = "your-secret-key"   # from env in production
+ALGORITHM  = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+pwd_context    = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme  = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + \
+             timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_access_token(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+
+# api/v1/auth.py
+@router.post("/token", response_model=Token)
+async def login(form: OAuth2PasswordRequestForm = Depends(),
+                db: AsyncSession = Depends(get_db)):
+    user = await crud.user.get_by_username(db, form.username)
+    if not user or not verify_password(form.password,
+                                        user.hashed_password):
+        raise HTTPException(status_code=401,
+                            detail="Incorrect credentials")
+    token = create_access_token({"sub": str(user.id)})
+    return {"access_token": token, "token_type": "bearer"}
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark', 'sequence': {'mirrorActors': false}}}%%
+sequenceDiagram
+    participant C  as Client
+    participant A  as /auth/token
+    participant R  as Protected Route
+    participant DI as get_current_user
+
+    C  ->> A  : POST username + password
+    A  ->> A  : verify_password(plain, hashed)
+    A  -->> C : {access_token, token_type}
+    C  ->> R  : GET /posts<br/>Authorization: Bearer <jwt>
+    R  ->> DI : Depends(get_current_user)
+    DI ->> DI : decode_access_token(jwt)
+    DI ->> DI : load user from DB
+    DI -->> R : User object
+    R  -->> C : 200 JSON response
+```
+:::
+
+::: {.fragment}
+**JWT structure:**  
+`Header.Payload.Signature`  
+Payload carries: `sub` (user id), `exp` (expiry)  
+Never store sensitive data in the payload — it is **base64-encoded, not encrypted**
+:::
+:::
+:::
+
+---
+
+## Database with SQLAlchemy (Async) {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# db/session.py
+from sqlalchemy.ext.asyncio import (
+    create_async_engine, async_sessionmaker, AsyncSession
+)
+DATABASE_URL = "postgresql+asyncpg://user:pass@localhost/mydb"
+
+engine = create_async_engine(DATABASE_URL, echo=False, pool_size=10)
+async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+# models/post.py
+from sqlalchemy import String, Text, ForeignKey, Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from db.base import Base
+import datetime
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id:         Mapped[int]      = mapped_column(primary_key=True)
+    title:      Mapped[str]      = mapped_column(String(200))
+    content:    Mapped[str]      = mapped_column(Text)
+    status:     Mapped[str]      = mapped_column(default="draft")
+    author_id:  Mapped[int]      = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow)
+
+    author: Mapped["User"] = relationship(back_populates="posts")
+
+# crud/post.py
+from sqlalchemy import select
+
+async def get(db: AsyncSession, *, id: int) -> Post | None:
+    result = await db.execute(select(Post).where(Post.id == id))
+    return result.scalar_one_or_none()
+
+async def get_multi(db: AsyncSession, *, skip=0, limit=10):
+    result = await db.execute(
+        select(Post).offset(skip).limit(limit).order_by(Post.created_at.desc())
+    )
+    return result.scalars().all()
+
+async def create(db: AsyncSession, *, obj_in: PostCreate, author_id: int):
+    db_obj = Post(**obj_in.model_dump(), author_id=author_id)
+    db.add(db_obj)
+    await db.flush()
+    return db_obj
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    APP["FastAPI App"] --> ENGINE["create_async_engine<br/>(asyncpg driver)"]
+    ENGINE --> POOL["Connection Pool<br/>pool_size=10"]
+    POOL --> SESSION["async_sessionmaker<br/>→ AsyncSession"]
+    SESSION -->|"Depends(get_db)"| CRUD["CRUD functions<br/>await db.execute(select(...))"]
+    CRUD --> MODELS["SQLAlchemy Models<br/>Mapped[] type hints"]
+    MODELS --> DB[(PostgreSQL)]
+
+    classDef app   fill:#e94560,stroke:none,color:#fff
+    classDef infra fill:#533483,stroke:none,color:#fff
+    classDef code  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef db    fill:#16213e,stroke:#2ecc71,color:#fff
+    class APP app
+    class ENGINE,POOL infra
+    class SESSION,CRUD,MODELS code
+    class DB db
+```
+:::
+
+::: {.fragment}
+**Async DB drivers:**  
+PostgreSQL → `asyncpg`  
+MySQL → `aiomysql`  
+SQLite → `aiosqlite`  
+MongoDB → `motor`  
+Redis → `redis-py` (async)
+:::
+:::
+:::
+
+---
+
+## Alembic Migrations {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="50%"}
+```bash
+# Install & initialise
+pip install alembic
+alembic init alembic
+
+# Generate a migration from model changes
+alembic revision --autogenerate -m "add posts table"
+
+# Apply migrations
+alembic upgrade head
+
+# Roll back one step
+alembic downgrade -1
+
+# Show migration history
+alembic history --verbose
+```
+
+::: {.fragment}
+```python
+# alembic/env.py — key async setup
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from db.base import Base
+import models  # import all models so Base.metadata is populated
+
+target_metadata = Base.metadata
+
+def run_migrations_online():
+    connectable = async_engine_from_config(...)
+    async with connectable.connect() as connection:
+        await connection.run_sync(
+            context.run_migrations
+        )
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    A["Define SQLAlchemy<br/>Model"] --> B["alembic revision<br/>--autogenerate<br/>→ versions/0001_*.py"]
+    B --> C["alembic upgrade head<br/>→ CREATE TABLE / ALTER"]
+    C --> D["Modify Model<br/>(add column)"]
+    D --> E["alembic revision<br/>--autogenerate<br/>→ versions/0002_*.py"]
+    E --> F["alembic upgrade head<br/>→ ALTER TABLE"]
+
+    classDef edit fill:#e94560,stroke:none,color:#fff
+    classDef cmd  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef db   fill:#533483,stroke:none,color:#fff
+    class A,D edit
+    class B,E cmd
+    class C,F db
+```
+:::
+
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    V1["0001_initial"] --> V2["0002_add_status"]
+    V2 --> V3["0003_add_tags"]
+    V3 --> HEAD["head"]
+
+    classDef ver  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef head fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class V1,V2,V3 ver
+    class HEAD head
+```
+:::
+:::
+:::
+
+---
+
+## Async / Await Deep Dive {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+import asyncio
+import httpx
+from fastapi import APIRouter
+
+router = APIRouter()
+
+# ─── async path operation ──────────────────────────────────
+@router.get("/posts/{post_id}")
+async def get_post(post_id: int, db = Depends(get_db)):
+    # Non-blocking I/O — other requests served during await
+    post = await crud.post.get(db, id=post_id)
+    return post
+
+# ─── concurrent I/O with asyncio.gather ───────────────────
+@router.get("/dashboard")
+async def dashboard(user = Depends(get_current_user),
+                    db   = Depends(get_db)):
+    # Fire 3 DB queries simultaneously — not sequentially!
+    posts, comments, stats = await asyncio.gather(
+        crud.post.get_by_user(db, user_id=user.id),
+        crud.comment.get_recent(db, user_id=user.id),
+        crud.analytics.get_user_stats(db, user_id=user.id),
+    )
+    return {"posts": posts, "comments": comments, "stats": stats}
+
+# ─── calling external APIs asynchronously ─────────────────
+@router.get("/weather")
+async def get_weather(city: str):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"https://api.weather.com/v1/{city}"
+        )
+        return resp.json()
+
+# ─── sync functions — use run_in_threadpool automatically ──
+@router.get("/sync-example")
+def sync_route(data: str):        # No async — runs in thread pool
+    result = some_blocking_call(data)
+    return result
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph SYNC["Traditional Sync (WSGI)"]
+        R1["Request 1"] --> W1["Wait for DB<br/>(blocking)"]
+        W1 --> R1D["Request 1 done"]
+        R2["Request 2"] --> W2["Wait for DB<br/>(blocking)"]
+    end
+
+    subgraph ASYNC["FastAPI Async (ASGI)"]
+        A1["Request 1"] -->|"await db"| LOOP["Event Loop<br/>(free to handle others)"]
+        A2["Request 2"] --> LOOP
+        A3["Request 3"] --> LOOP
+        LOOP -->|"DB responds"| A1D["Request 1 done"]
+    end
+
+    classDef sync fill:#533483,stroke:none,color:#fff
+    classDef asy  fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class R1,W1,R1D,R2,W2 sync
+    class A1,A2,A3,LOOP,A1D asy
+```
+:::
+
+::: {.fragment}
+> Use `async def` for I/O-bound work (DB, HTTP). Use regular `def` for CPU-bound work — FastAPI automatically runs it in a thread pool via `run_in_threadpool`.
+:::
+:::
+:::
+
+---
+
+## Background Tasks {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import APIRouter, BackgroundTasks
+import smtplib
+from email.message import EmailMessage
+
+router = APIRouter()
+
+# ─── Background task functions ─────────────────────────────
+def send_welcome_email(email: str, username: str):
+    """Runs after the response is sent — non-blocking for client."""
+    msg = EmailMessage()
+    msg["Subject"] = f"Welcome, {username}!"
+    msg["From"]    = "noreply@myapp.com"
+    msg["To"]      = email
+    msg.set_content(f"Hi {username}, thanks for signing up!")
+    with smtplib.SMTP("localhost") as s:
+        s.send_message(msg)
+
+async def update_user_stats(user_id: int, action: str):
+    async with async_session_maker() as db:
+        await crud.analytics.record_event(db, user_id, action)
+
+# ─── Injecting BackgroundTasks ─────────────────────────────
+@router.post("/register", response_model=UserOut,
+             status_code=201)
+async def register(
+    user_in: UserCreate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await crud.user.create(db, obj_in=user_in)
+
+    # Schedule after response is sent
+    background_tasks.add_task(
+        send_welcome_email, user.email, user.username
+    )
+    background_tasks.add_task(
+        update_user_stats, user.id, "registered"
+    )
+
+    return user   # ← client receives this immediately
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant C as Client
+    participant FW as FastAPI
+    participant BG as Background Runner
+
+    C  ->> FW : POST /register
+    FW ->> FW : create user in DB
+    FW ->> BG : schedule send_welcome_email()
+    FW ->> BG : schedule update_user_stats()
+    FW -->> C : 201 UserOut (instant)
+    BG ->> BG : send_welcome_email() (async)
+    BG ->> BG : update_user_stats() (async)
+```
+:::
+
+::: {.fragment}
+**When to use BackgroundTasks vs Celery:**
+
+| Scenario | Use |
+|---|---|
+| Quick fire-and-forget | `BackgroundTasks` |
+| Long-running jobs (>5 sec) | Celery |
+| Scheduled / periodic tasks | Celery Beat |
+| Retries on failure | Celery |
+| Distributed workers | Celery |
+:::
+:::
+:::
+
+---
+
+## Middleware {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+import time, uuid
+
+app = FastAPI()
+
+# ─── Built-in middleware ────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://myfrontend.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TrustedHostMiddleware,
+                   allowed_hosts=["myapp.com", "*.myapp.com"])
+
+# ─── Custom middleware ──────────────────────────────────────
+@app.middleware("http")
+async def add_request_id_and_timing(request: Request, call_next):
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+
+    start = time.perf_counter()
+    response = await call_next(request)         # run the rest of the stack
+    duration = time.perf_counter() - start
+
+    response.headers["X-Request-ID"]  = request_id
+    response.headers["X-Process-Time"] = f"{duration:.4f}s"
+    return response
+
+# ─── Exception handler (global) ────────────────────────────
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": str(exc.body)},
+    )
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    REQ["Incoming Request"] --> TRUSTED["TrustedHostMiddleware<br/>(block unknown hosts)"]
+    TRUSTED --> CORS["CORSMiddleware<br/>(set CORS headers)"]
+    CORS --> GZIP["GZipMiddleware<br/>(decompress request)"]
+    GZIP --> CUSTOM["Custom Middleware<br/>(request ID + timing)"]
+    CUSTOM --> APP["Path Operation<br/>Function"]
+    APP --> CUSTOM2["Custom Middleware<br/>(inject headers)"]
+    CUSTOM2 --> GZIP2["GZipMiddleware<br/>(compress response)"]
+    GZIP2 --> CORS2["CORSMiddleware<br/>(set CORS headers)"]
+    CORS2 --> RES["Outgoing Response"]
+
+    classDef mw  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef app fill:#533483,stroke:none,color:#fff
+    classDef res fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class TRUSTED,CORS,GZIP,CUSTOM,CUSTOM2,GZIP2,CORS2 mw
+    class APP app
+    class REQ,RES res
+```
+:::
+:::
+:::
+
+---
+
+## Error Handling {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import HTTPException, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+# ─── Standard HTTPException ────────────────────────────────
+@router.get("/posts/{post_id}")
+async def get_post(post_id: int, db = Depends(get_db)):
+    post = await crud.post.get(db, id=post_id)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post {post_id} not found",
+            headers={"X-Error": "resource-missing"},
+        )
+    return post
+
+# ─── Custom exception class ────────────────────────────────
+class InsufficientPermissions(Exception):
+    def __init__(self, required_role: str):
+        self.required_role = required_role
+
+@app.exception_handler(InsufficientPermissions)
+async def handle_permission_error(request, exc):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "error": "permission_denied",
+            "required_role": exc.required_role,
+        }
+    )
+
+# ─── Override 422 validation error format ─────────────────
+@app.exception_handler(RequestValidationError)
+async def custom_422(request, exc: RequestValidationError):
+    errors = [
+        {"field": ".".join(str(l) for l in e["loc"]),
+         "message": e["msg"]}
+        for e in exc.errors()
+    ]
+    return JSONResponse(status_code=422,
+                        content={"errors": errors})
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    REQ["Request"] --> VALID{"Pydantic<br/>Validation?"}
+    VALID -->|Fail| V422["422 Unprocessable<br/>RequestValidationError"]
+    VALID -->|Pass| VIEW["Path Operation"]
+    VIEW --> HTTP{"HTTPException<br/>raised?"}
+    HTTP -->|Yes| HTTPRESP["HTTP Error Response<br/>status + detail JSON"]
+    HTTP -->|No| CUSTOM{"Custom<br/>Exception?"}
+    CUSTOM -->|Yes| HANDLER["Custom exception_handler<br/>→ JSONResponse"]
+    CUSTOM -->|No| UNHANDLED["500 Internal<br/>Server Error"]
+    VIEW -->|success| OK["200/201 JSON Response"]
+
+    classDef fail fill:#533483,stroke:none,color:#fff
+    classDef ok   fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    classDef err  fill:#3d0a0a,stroke:#e94560,color:#fff
+    classDef step fill:#0f3460,stroke:#aaa,color:#fff
+    class V422,HTTPRESP,HANDLER,UNHANDLED err
+    class OK ok
+    class VALID,HTTP,CUSTOM step
+```
+:::
+:::
+:::
+
+---
+
+## WebSockets {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from typing import List
+
+router = APIRouter()
+
+# ─── Connection manager for broadcast ─────────────────────
+class ConnectionManager:
+    def __init__(self):
+        self.active: List[WebSocket] = []
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.append(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.active.remove(ws)
+
+    async def broadcast(self, message: str):
+        for connection in self.active:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+# ─── WebSocket endpoint ────────────────────────────────────
+@router.websocket("/ws/chat/{room_id}")
+async def chat(websocket: WebSocket, room_id: str,
+               token: str):
+    # Authenticate via query param token
+    user = await get_user_from_token(token)
+    if not user:
+        await websocket.close(code=1008)
+        return
+
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(
+                f"[{room_id}] {user.username}: {data}"
+            )
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        await manager.broadcast(f"{user.username} left the room")
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark', 'sequence': {'mirrorActors': false}}}%%
+sequenceDiagram
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant S  as FastAPI WS
+
+    C1 ->> S : WS Connect /ws/chat/room1
+    S  -->> C1: accept()
+    C2 ->> S : WS Connect /ws/chat/room1
+    S  -->> C2: accept()
+    C1 ->> S : send_text("Hello!")
+    S  -->> C1: broadcast "Alice: Hello!"
+    S  -->> C2: broadcast "Alice: Hello!"
+    C2 ->> S : send_text("Hi there!")
+    S  -->> C1: broadcast "Bob: Hi there!"
+    S  -->> C2: broadcast "Bob: Hi there!"
+    C1 ->> S : disconnect
+    S  -->> C2: "Alice left the room"
+```
+:::
+:::
+:::
+
+---
+
+## OpenAPI & Automatic Docs {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI(
+    title="Blog API",
+    description="""
+## Blog API
+
+Manage posts, users, and comments.
+
+### Features
+- 🔐 JWT Authentication
+- 📄 Full CRUD for posts
+- 📊 Analytics endpoints
+    """,
+    version="2.1.0",
+    contact={"name": "API Team", "email": "api@myapp.com"},
+    license_info={"name": "MIT"},
+)
+
+# Enrich docs with Field descriptions
+class PostCreate(BaseModel):
+    title: str = Field(
+        ...,
+        min_length=5,
+        description="Post title (5–200 chars)",
+        examples=["My First FastAPI Post"],
+    )
+    content: str = Field(
+        ..., description="Full post body in Markdown"
+    )
+
+# Tag endpoints for grouping in Swagger UI
+@router.get(
+    "/posts",
+    tags=["Posts"],
+    summary="List all published posts",
+    description="Returns a paginated list of posts. "
+                "Supports filtering by status and category.",
+    response_description="Paginated list of PostOut objects",
+    responses={
+        200: {"description": "Successful response"},
+        401: {"description": "Not authenticated"},
+    },
+)
+async def list_posts(...): ...
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    APP["FastAPI App"] -->|"inspects"| ROUTES["Route definitions<br/>@router.get/post/..."]
+    ROUTES --> PYDANTIC["Pydantic schemas<br/>request + response models"]
+    ROUTES --> PARAMS["Path / Query / Header<br/>parameters + validators"]
+    APP --> OPENAPI["/openapi.json<br/>OpenAPI 3.1 schema"]
+    OPENAPI --> SWAGGER["/docs<br/>Swagger UI<br/>(interactive try-it-out)"]
+    OPENAPI --> REDOC["/redoc<br/>ReDoc<br/>(read-only reference)"]
+    OPENAPI --> CLIENT["Code generators<br/>openapi-generator<br/>fastapi-code-generator"]
+
+    classDef app    fill:#e94560,stroke:none,color:#fff
+    classDef source fill:#533483,stroke:none,color:#fff
+    classDef doc    fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class APP app
+    class ROUTES,PYDANTIC,PARAMS source
+    class OPENAPI,SWAGGER,REDOC,CLIENT doc
+```
+:::
+
+::: {.fragment}
+> FastAPI generates `/openapi.json` **automatically** from your code — zero manual YAML/JSON schema writing. It updates live as you change the code.
+:::
+:::
+:::
+
+---
+
+## Testing {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# tests/test_posts.py
+import pytest
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from main import app
+from db.session import get_db
+from db.base import Base
+
+# ─── Test database setup ───────────────────────────────────
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+@pytest.fixture(scope="session")
+async def test_engine():
+    engine = create_async_engine(TEST_DATABASE_URL)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield engine
+    await engine.dispose()
+
+@pytest.fixture
+async def db_session(test_engine):
+    session_maker = async_sessionmaker(test_engine)
+    async with session_maker() as session:
+        yield session
+        await session.rollback()
+
+@pytest.fixture
+async def client(db_session):
+    # Override the real DB dependency with the test DB
+    app.dependency_overrides[get_db] = lambda: db_session
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+    app.dependency_overrides.clear()
+
+# ─── Tests ────────────────────────────────────────────────
+@pytest.mark.asyncio
+async def test_create_post(client, auth_headers):
+    response = await client.post(
+        "/api/v1/posts/",
+        json={"title": "Test Post", "content": "Hello World",
+              "category_id": 1},
+        headers=auth_headers,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == "Test Post"
+    assert "id" in data
+
+@pytest.mark.asyncio
+async def test_get_post_not_found(client):
+    response = await client.get("/api/v1/posts/99999")
+    assert response.status_code == 404
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    SUITE["pytest test suite"] --> FIXTURES["Fixtures<br/>(scope=session/function)"]
+    FIXTURES --> ENGINE["Test SQLite<br/>in-memory DB"]
+    FIXTURES --> SESSION["db_session<br/>(rolled back after each test)"]
+    FIXTURES --> CLIENT["AsyncClient<br/>(ASGITransport)"]
+    CLIENT --> OVERRIDE["dependency_overrides<br/>{get_db: test_db}"]
+    OVERRIDE --> APP["FastAPI App<br/>(no real server needed)"]
+    APP --> ASSERT["Assertions<br/>assert status_code<br/>assert response.json()"]
+
+    classDef root  fill:#e94560,stroke:none,color:#fff
+    classDef fix   fill:#533483,stroke:none,color:#fff
+    classDef infra fill:#0f3460,stroke:#aaa,color:#fff
+    classDef ok    fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    class SUITE root
+    class FIXTURES,ENGINE,SESSION,CLIENT,OVERRIDE fix
+    class APP infra
+    class ASSERT ok
+```
+:::
+
+::: {.fragment}
+```bash
+pip install pytest pytest-asyncio httpx aiosqlite
+pytest -v --asyncio-mode=auto
+pytest tests/ -k "post" --cov=app --cov-report=term
+```
+:::
+:::
+:::
+
+---
+
+## Settings & Configuration {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# core/settings.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
+
+class Settings(BaseSettings):
+    # App
+    app_name:    str = "My FastAPI App"
+    debug:       bool = False
+    environment: str = "production"
+
+    # Database
+    database_url:       str
+    database_pool_size: int = 10
+
+    # Security
+    secret_key:                  str
+    algorithm:                   str = "HS256"
+    access_token_expire_minutes: int = 30
+
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
+    # External APIs
+    sendgrid_api_key: str = ""
+    aws_s3_bucket:    str = ""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+# Usage anywhere in the app
+settings = get_settings()
+# or as a FastAPI dependency:
+# def route(settings: Settings = Depends(get_settings)):
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+**`.env` file**
+```bash
+DATABASE_URL=postgresql+asyncpg://user:pass@db/mydb
+SECRET_KEY=super-secret-key-change-me
+DEBUG=false
+ENVIRONMENT=production
+DATABASE_POOL_SIZE=20
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REDIS_URL=redis://redis:6379/0
+```
+:::
+
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ENV[".env file<br/>(gitignored)"] --> SETTINGS["pydantic_settings<br/>BaseSettings<br/>(type-validated)"]
+    ENV_VAR["Environment Variables<br/>(Docker / K8s secrets)"] --> SETTINGS
+    SETTINGS -->|"@lru_cache"| CACHED["Cached singleton<br/>get_settings()"]
+    CACHED --> APP["FastAPI App<br/>dependencies / modules"]
+
+    classDef src   fill:#533483,stroke:none,color:#fff
+    classDef core  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef app   fill:#e94560,stroke:none,color:#fff
+    class ENV,ENV_VAR src
+    class SETTINGS,CACHED core
+    class APP app
+```
+:::
+:::
+:::
+
+---
+
+## Deployment Architecture {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'orthogonal'}}}%%
+graph TD
+    USER["🌐 Users"] -->|HTTPS| CDN["CDN<br/>(CloudFront / Cloudflare)<br/>Static assets"]
+    USER -->|HTTPS| LB["Load Balancer<br/>(Nginx / AWS ALB)"]
+    LB  -->|HTTP/2| UV1["Uvicorn Worker 1<br/>(ASGI)"]
+    LB  -->|HTTP/2| UV2["Uvicorn Worker 2<br/>(ASGI)"]
+    LB  -->|HTTP/2| UV3["Uvicorn Worker N<br/>(ASGI)"]
+    UV1 -->|async| APP["FastAPI Application"]
+    UV2 -->|async| APP
+    UV3 -->|async| APP
+    APP -->|asyncpg| DB["PostgreSQL<br/>(Primary)"]
+    DB  -->|replication| DBREP["PostgreSQL Replica<br/>(Read-only)"]
+    APP -->|aioredis| REDIS["Redis<br/>(Cache + Sessions<br/>+ Celery broker)"]
+    APP -->|enqueue| CELERY["Celery Workers<br/>(Async Tasks)"]
+    CELERY --> REDIS
+    APP -->|S3 SDK| S3["Object Storage<br/>(S3 / GCS)"]
+    CDN -.-> S3
+
+    classDef user  fill:#e94560,stroke:none,color:#fff
+    classDef infra fill:#533483,stroke:none,color:#fff
+    classDef app   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef data  fill:#16213e,stroke:#2ecc71,color:#fff
+    class USER user
+    class CDN,LB,UV1,UV2,UV3 infra
+    class APP,CELERY app
+    class DB,DBREP,REDIS,S3 data
+```
+
+---
+
+## Dockerfile & Docker Compose {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**`Dockerfile`**
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dependencies first (layer caching)
+COPY pyproject.toml poetry.lock ./
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev
+
+COPY . .
+
+# Run Alembic migrations then start Uvicorn
+CMD ["sh", "-c", \
+     "alembic upgrade head && \
+      uvicorn main:app --host 0.0.0.0 --port 8000 \
+      --workers 4 --loop uvloop --http httptools"]
+```
+
+::: {.fragment}
+**`docker-compose.yml`**
+```yaml
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    env_file: .env
+    depends_on: [db, redis]
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB:       mydb
+      POSTGRES_USER:     user
+      POSTGRES_PASSWORD: pass
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  redis:
+    image: redis:7-alpine
+
+  celery_worker:
+    build: .
+    command: celery -A tasks worker --loglevel=info
+    env_file: .env
+    depends_on: [db, redis]
+
+volumes:
+  pgdata:
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    COMPOSE["docker-compose up"] --> API["api container<br/>uvicorn main:app<br/>:8000"]
+    COMPOSE --> DB["db container<br/>PostgreSQL :5432"]
+    COMPOSE --> REDIS["redis container<br/>Redis :6379"]
+    COMPOSE --> WORKER["celery_worker<br/>container"]
+
+    API --> DB
+    API --> REDIS
+    WORKER --> DB
+    WORKER --> REDIS
+
+    classDef compose fill:#e94560,stroke:none,color:#fff
+    classDef svc     fill:#0f3460,stroke:#aaa,color:#fff
+    class COMPOSE compose
+    class API,DB,REDIS,WORKER svc
+```
+:::
+
+::: {.fragment}
+> For production, add **Gunicorn as process manager** wrapping Uvicorn workers:  
+> ```bash
+> gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+> ```
+:::
+:::
+:::
+
+---
+
+## Production Checklist {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+**Security**
+
+- [ ] `SECRET_KEY` from env variable (never hardcode)
+- [ ] `debug=False` in production
+- [ ] HTTPS enforced at load balancer
+- [ ] CORS restricted to known origins
+- [ ] Rate limiting (slowapi / nginx)
+- [ ] JWT expiry set short (30–60 min)
+- [ ] Refresh token rotation implemented
+- [ ] Pydantic models validate all input
+
+**Database**
+
+- [ ] PostgreSQL with asyncpg (not SQLite)
+- [ ] Connection pool sized correctly
+- [ ] Alembic migrations in CI/CD pipeline
+- [ ] DB credentials from secrets manager
+- [ ] Regular automated backups
+:::
+
+::: {.column width="50%"}
+**Performance**
+
+- [ ] `uvloop` event loop (`--loop uvloop`)
+- [ ] `httptools` HTTP parser
+- [ ] `select_related` / joined loads in queries
+- [ ] Redis cache for expensive queries
+- [ ] Response compression (GZipMiddleware)
+- [ ] Static files via CDN, not FastAPI
+
+**Operations**
+
+- [ ] Gunicorn + UvicornWorker process manager
+- [ ] Structured JSON logging (`loguru` / `structlog`)
+- [ ] Sentry for error tracking
+- [ ] Health check endpoint `/health`
+- [ ] Prometheus metrics (`prometheus-fastapi-instrumentator`)
+- [ ] OpenAPI docs disabled in prod (`docs_url=None`)
+- [ ] Celery for async tasks > 1 sec
+- [ ] Graceful shutdown via SIGTERM handler
+:::
+:::
+
+---
+
+## FastAPI Ecosystem {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+mindmap
+  root((FastAPI<br/>Ecosystem))
+    Data Validation
+      pydantic v2
+      pydantic-settings
+      pydantic-extra-types
+    Database
+      SQLAlchemy 2.0
+      SQLModel
+      Tortoise ORM
+      Beanie (MongoDB)
+      asyncpg / aiosqlite
+    Authentication
+      python-jose (JWT)
+      passlib (bcrypt)
+      FastAPI-Users
+      Authlib (OAuth2)
+    Testing
+      pytest-asyncio
+      httpx
+      factory-boy
+      Faker
+    Tasks & Scheduling
+      Celery + Redis
+      ARQ (async)
+      APScheduler
+    Monitoring
+      prometheus-fastapi
+      OpenTelemetry
+      Sentry SDK
+      loguru
+    Deployment
+      uvicorn
+      gunicorn
+      uvloop
+      httptools
+    API Extras
+      slowapi (rate limit)
+      fastapi-cache2
+      fastapi-pagination
+      fastapi-mail
+```
+
+---
+
+## Summary {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph REQUEST["Request Phase ▶"]
+        UV["Uvicorn<br/>(ASGI)"] --> MW["Middleware<br/>(CORS, Auth, Timing)"]
+        MW --> ROUTER["APIRouter<br/>(path match)"]
+        ROUTER --> DI["Dependency<br/>Injection"]
+    end
+
+    subgraph PROCESS["Processing"]
+        DI --> PYDANTIC["Pydantic<br/>(validate input)"]
+        PYDANTIC --> VIEW["Path Operation<br/>Function"]
+        VIEW -->|"await"| DB[(Database)]
+        DB --> VIEW
+        VIEW -->|"await"| CACHE["Redis<br/>Cache"]
+        CACHE --> VIEW
+    end
+
+    subgraph RESPONSE["◀ Response Phase"]
+        VIEW --> SERIAL["Pydantic<br/>(serialize output)"]
+        SERIAL --> STATUS["Status Code<br/>+ Headers"]
+        STATUS --> CLIENT["JSON Response<br/>to Client"]
+    end
+
+    subgraph ASYNC["Fire & Forget"]
+        VIEW --> BG["BackgroundTasks<br/>/ Celery"]
+    end
+
+    classDef req  fill:#e94560,stroke:none,color:#fff
+    classDef proc fill:#0f3460,stroke:#aaa,color:#fff
+    classDef resp fill:#533483,stroke:none,color:#fff
+    classDef bg   fill:#16213e,stroke:#2ecc71,color:#fff
+```
+
+::: {.fragment}
+**Key Takeaways:**
+
+- **Async-first** — true non-blocking I/O via ASGI/uvicorn; handle thousands of concurrent connections
+- **Type hints everywhere** — Pydantic v2 validates all input/output automatically; 422 errors are free
+- **Auto-generated OpenAPI docs** — `/docs` and `/redoc` update live with your code; no manual YAML
+- **Dependency Injection** — clean, testable, composable; swap deps for testing with `dependency_overrides`
+- **Standards-based** — OAuth2, JWT, JSON Schema, OpenAPI 3 — all implemented correctly out of the box
+:::

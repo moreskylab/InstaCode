@@ -1,0 +1,1628 @@
+---
+title: "Django"
+subtitle: "The Web Framework for Perfectionists with Deadlines"
+author: "Python with Django"
+date: today
+format:
+  revealjs:
+    theme: [dark, custom.scss]
+    highlight-style: monokai
+    filters:
+      - code-fullscreen
+    transition: slide
+    slide-number: true
+    chalkboard: false
+    footer: "Django — Complete Guide"
+    progress: true
+    code-fold: false
+    code-line-numbers: true
+    code-overflow: wrap
+    incremental: false
+    width: 1280
+    height: 720
+    margin: 0.05
+    center: false
+  pptx:
+    mermaid-format: png
+mermaid:
+  theme: dark
+
+execute:
+  echo: false
+  eval: true
+---
+
+## What is Django? {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Django** is a high-level Python web framework that encourages **rapid development** and **clean, pragmatic design**.
+
+<br>
+
+::: {.fragment}
+**Core Philosophy**
+
+- **DRY** — Don't Repeat Yourself
+- **Convention over Configuration**
+- **Batteries Included** — everything you need is built in
+:::
+
+::: {.fragment}
+**Released in 2005** by Adrian Holovaty and Simon Willison  
+Named after jazz guitarist **Django Reinhardt**  
+Maintained by the **Django Software Foundation (DSF)**
+:::
+
+::: {.fragment}
+**Used by:** Instagram, Pinterest, Disqus, Mozilla, Bitbucket, NASA
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+mindmap
+  root((Django))
+    ORM
+      Models
+      Migrations
+      QuerySets
+    Web Layer
+      URLs
+      Views
+      Templates
+    Features
+      Admin Panel
+      Auth System
+      Forms
+      Middleware
+    Ecosystem
+      DRF
+      Channels
+      Celery
+```
+:::
+:::
+:::
+
+---
+
+## Django vs Other Frameworks {.scrollable background-color="#16213e"}
+
+| Feature | Django | Flask | FastAPI | Express (Node) |
+|---|---|---|---|---|
+| Type | Full-stack | Micro | Async API | Micro |
+| ORM | Built-in | 3rd-party | 3rd-party | 3rd-party |
+| Admin Panel | ✅ Built-in | ❌ | ❌ | ❌ |
+| Auth System | ✅ Built-in | ❌ | ❌ | ❌ |
+| Learning Curve | Medium | Low | Low | Low |
+| Performance | Good | Good | Excellent | Excellent |
+| Best For | Full web apps | Simple APIs | Async APIs | JS ecosystem |
+
+::: {.fragment}
+> **Choose Django** when you need a complete, production-ready framework with admin, auth, ORM, and migrations out-of-the-box.
+:::
+
+---
+
+## MVT Architecture {.scrollable background-color="#0f3460"}
+
+Django follows the **Model-View-Template (MVT)** pattern — a variant of MVC.
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'orthogonal'}}}%%
+graph TD
+    Browser["🌐 Browser / Client"] -->|HTTP Request| URL
+    URL["🔀 URL Dispatcher<br/>(urls.py)"] -->|routes to| View
+    View["⚙️ View<br/>(views.py)"] -->|queries| Model
+    Model["🗄️ Model<br/>(models.py)"] -->|data| DB[(Database)]
+    DB -->|rows| Model
+    Model -->|queryset| View
+    View -->|context| Template
+    Template["📄 Template<br/>(.html)"] -->|rendered HTML| Browser
+
+    classDef browser fill:#e94560,stroke:none,color:#fff
+    classDef url     fill:#533483,stroke:none,color:#fff
+    classDef view    fill:#0f3460,stroke:#e94560,color:#fff
+    classDef model   fill:#16213e,stroke:#e94560,color:#fff
+    classDef db      fill:#1a1a2e,stroke:#aaa,color:#ccc
+    classDef tpl     fill:#0a2e1a,stroke:#2ecc71,color:#fff
+    class Browser browser
+    class URL url
+    class View view
+    class Model model
+    class DB db
+    class Template tpl
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+**Model** — Defines data structure & database schema
+
+**View** — Business logic; takes a request, returns a response
+
+**Template** — HTML with Django Template Language (DTL)
+
+**URL Dispatcher** — Maps URL patterns to view functions
+:::
+
+::: {.fragment}
+> Unlike MVC, Django's "View" is the Controller, and the "Template" is the View.
+:::
+:::
+:::
+
+---
+
+## Request–Response Lifecycle {.scrollable background-color="#1a1a2e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'sequence': {'mirrorActors': false}}}%%
+sequenceDiagram
+    participant C  as 🌐 Client
+    participant MW as 🛡️ Middleware Stack
+    participant U  as 🔀 URL Dispatcher
+    participant V  as ⚙️ View
+    participant M  as 🗄️ Model / ORM
+    participant DB as 💾 Database
+    participant T  as 📄 Template Engine
+
+    C  ->> MW : HTTP Request
+    MW ->> U  : process_request()
+    U  ->> V  : route match → call view(request)
+    V  ->> M  : Model.objects.filter(...)
+    M  ->> DB : SQL Query
+    DB -->> M : Result rows
+    M  -->> V : QuerySet
+    V  ->> T  : render(request, template, context)
+    T  -->> V : HTML string
+    V  -->> MW: HttpResponse
+    MW -->> C : process_response() → Final HTTP Response
+```
+
+---
+
+## Project Structure {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+**Create a project**
+```bash
+django-admin startproject mysite
+cd mysite
+python manage.py startapp blog
+```
+
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    ROOT["📁 mysite/"] --> MANAGE["manage.py"]
+    ROOT --> PROJ["📁 mysite/ (config)"]
+    ROOT --> APP["📁 blog/ (app)"]
+
+    PROJ --> SETTINGS["settings.py"]
+    PROJ --> URLS["urls.py"]
+    PROJ --> WSGI["wsgi.py"]
+    PROJ --> ASGI["asgi.py"]
+
+    APP --> MODELS["models.py"]
+    APP --> VIEWS["views.py"]
+    APP --> APPURLS["urls.py"]
+    APP --> ADMIN["admin.py"]
+    APP --> FORMS["forms.py"]
+    APP --> TESTS["tests.py"]
+    APP --> MIGRATIONS["📁 migrations/"]
+    APP --> TEMPLATES["📁 templates/"]
+    APP --> STATIC["📁 static/"]
+
+    classDef file  fill:#0f3460,stroke:#e94560,color:#fff
+    classDef dir   fill:#1a1a2e,stroke:#533483,color:#ccc
+    class MANAGE,SETTINGS,URLS,WSGI,ASGI,MODELS,VIEWS,APPURLS,ADMIN,FORMS,TESTS file
+    class ROOT,PROJ,APP,MIGRATIONS,TEMPLATES,STATIC dir
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+**Key files explained:**
+
+| File | Purpose |
+|---|---|
+| `manage.py` | CLI tool for Django commands |
+| `settings.py` | All project configuration |
+| `urls.py` (project) | Root URL configuration |
+| `models.py` | Database schema |
+| `views.py` | Request handlers |
+| `admin.py` | Admin site registration |
+| `migrations/` | DB schema version control |
+:::
+:::
+:::
+
+---
+
+## Settings Configuration {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# mysite/settings.py
+
+SECRET_KEY = 'your-secret-key-here'
+DEBUG = True          # ⚠️ False in production
+ALLOWED_HOSTS = ['*']
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'blog',           # ← your app
+]
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': [BASE_DIR / 'templates'],
+    'APP_DIRS': True,
+}]
+
+STATIC_URL  = '/static/'
+MEDIA_URL   = '/media/'
+MEDIA_ROOT  = BASE_DIR / 'media'
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    SETTINGS["settings.py"] --> APPS["INSTALLED_APPS<br/>(what's active)"]
+    SETTINGS --> DB["DATABASES<br/>(engine + name)"]
+    SETTINGS --> TMPL["TEMPLATES<br/>(dirs + loaders)"]
+    SETTINGS --> MW["MIDDLEWARE<br/>(processing chain)"]
+    SETTINGS --> STATIC["STATIC_URL<br/>MEDIA_ROOT"]
+    SETTINGS --> AUTH["AUTH_USER_MODEL<br/>LOGIN_URL"]
+    SETTINGS --> SEC["SECRET_KEY<br/>ALLOWED_HOSTS<br/>DEBUG"]
+
+    classDef node fill:#1a1a2e,stroke:#e94560,color:#fff
+    class APPS,DB,TMPL,MW,STATIC,AUTH,SEC node
+```
+:::
+:::
+:::
+
+---
+
+## URL Routing {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**Project-level `urls.py`**
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('blog/', include('blog.urls')),
+    path('api/', include('api.urls')),
+]
+```
+
+::: {.fragment}
+**App-level `blog/urls.py`**
+```python
+from django.urls import path
+from . import views
+
+app_name = 'blog'  # namespace
+
+urlpatterns = [
+    path('',             views.index,       name='index'),
+    path('<int:pk>/',    views.detail,      name='detail'),
+    path('new/',         views.create,      name='create'),
+    path('<int:pk>/edit/', views.update,    name='update'),
+    path('<slug:slug>/', views.by_slug,     name='by-slug'),
+]
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    REQ["Request: /blog/42/"] --> PROJ["project urls.py"]
+    PROJ -->|"blog/ → include"| APP["blog/urls.py"]
+    APP  -->|"&lt;int:pk&gt;/ → detail"| VIEW["views.detail(request, pk=42)"]
+
+    style REQ  fill:#e94560,stroke:none,color:#fff
+    style PROJ fill:#533483,stroke:none,color:#fff
+    style APP  fill:#0f3460,stroke:#e94560,color:#fff
+    style VIEW fill:#16213e,stroke:#2ecc71,color:#fff
+```
+:::
+
+::: {.fragment}
+**Path converters:**  
+`<int:pk>` — integer  
+`<str:name>` — non-empty string  
+`<slug:slug>` — slug  
+`<uuid:id>` — UUID  
+`<path:subpath>` — includes `/`
+:::
+:::
+:::
+
+---
+
+## Function-Based Views (FBV) {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from .models import Post
+from .forms import PostForm
+
+def index(request):
+    posts = Post.objects.all().order_by('-created_at')
+    return render(request, 'blog/index.html', {'posts': posts})
+
+def detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    return render(request, 'blog/detail.html', {'post': post})
+
+def create(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return HttpResponseRedirect(
+                reverse('blog:detail', args=[post.pk])
+            )
+    else:
+        form = PostForm()
+    return render(request, 'blog/form.html', {'form': form})
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    REQ["request arrives"] --> METHOD{request.method?}
+    METHOD -->|GET| BUILD["build empty form"]
+    METHOD -->|POST| BIND["bind form to POST data"]
+    BIND --> VALID{form.is_valid?}
+    VALID -->|Yes| SAVE["save to DB"]
+    SAVE --> REDIRECT["redirect to detail"]
+    VALID -->|No| RENDER_ERR["render form<br/>with errors"]
+    BUILD --> RENDER["render blank form"]
+
+    classDef decision fill:#533483,stroke:none,color:#fff
+    classDef action   fill:#0f3460,stroke:#e94560,color:#fff
+    classDef term     fill:#e94560,stroke:none,color:#fff
+    class METHOD,VALID decision
+    class BUILD,BIND,SAVE,RENDER_ERR,RENDER action
+    class REQ,REDIRECT term
+```
+:::
+:::
+:::
+
+---
+
+## Class-Based Views (CBV) {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from django.views.generic import (
+    ListView, DetailView,
+    CreateView, UpdateView, DeleteView
+)
+from django.urls import reverse_lazy
+from .models import Post
+
+class PostListView(ListView):
+    model         = Post
+    template_name = 'blog/index.html'
+    context_object_name = 'posts'
+    ordering      = ['-created_at']
+    paginate_by   = 10
+
+class PostDetailView(DetailView):
+    model         = Post
+    template_name = 'blog/detail.html'
+
+class PostCreateView(CreateView):
+    model         = Post
+    fields        = ['title', 'content', 'category']
+    template_name = 'blog/form.html'
+    success_url   = reverse_lazy('blog:index')
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+class PostDeleteView(DeleteView):
+    model       = Post
+    success_url = reverse_lazy('blog:index')
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    VIEW["django.views.generic.View"] --> BASE["Base"]
+    BASE --> TEMPLATE["TemplateView"]
+    BASE --> REDIRECT["RedirectView"]
+    VIEW --> DETAIL["DetailView"]
+    VIEW --> LIST["ListView"]
+    VIEW --> EDIT["Editing Views"]
+    EDIT --> CREATE["CreateView"]
+    EDIT --> UPDATE["UpdateView"]
+    EDIT --> DELETE["DeleteView"]
+    EDIT --> FORM["FormView"]
+    VIEW --> DATE["Date-based Views"]
+    DATE --> ARCHIVE["ArchiveIndexView"]
+    DATE --> YEAR["YearArchiveView"]
+    DATE --> TODAY["TodayArchiveView"]
+
+    classDef root   fill:#e94560,stroke:none,color:#fff
+    classDef group  fill:#533483,stroke:none,color:#fff
+    classDef leaf   fill:#0f3460,stroke:#aaa,color:#fff
+    class VIEW root
+    class BASE,EDIT,DATE group
+    class TEMPLATE,REDIRECT,DETAIL,LIST,CREATE,UPDATE,DELETE,FORM,ARCHIVE,YEAR,TODAY leaf
+```
+:::
+:::
+:::
+
+---
+
+## Models & ORM {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "categories"
+        ordering = ['name']
+
+class Post(models.Model):
+    STATUS = [('draft', 'Draft'), ('published', 'Published')]
+
+    title     = models.CharField(max_length=200)
+    slug      = models.SlugField(unique=True)
+    author    = models.ForeignKey(User, on_delete=models.CASCADE,
+                                  related_name='posts')
+    category  = models.ForeignKey(Category, on_delete=models.SET_NULL,
+                                  null=True)
+    tags      = models.ManyToManyField('Tag', blank=True)
+    content   = models.TextField()
+    status    = models.CharField(max_length=10, choices=STATUS,
+                                  default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+erDiagram
+    USER {
+        int id PK
+        string username
+        string email
+        string password
+    }
+    CATEGORY {
+        int id PK
+        string name
+        string slug
+    }
+    POST {
+        int id PK
+        string title
+        string slug
+        string content
+        string status
+        datetime created_at
+        datetime updated_at
+        int author_id FK
+        int category_id FK
+    }
+    TAG {
+        int id PK
+        string name
+    }
+    POST_TAGS {
+        int post_id FK
+        int tag_id FK
+    }
+    USER     ||--o{ POST : "writes"
+    CATEGORY ||--o{ POST : "contains"
+    POST     ||--o{ POST_TAGS : "has"
+    TAG      ||--o{ POST_TAGS : "labels"
+```
+:::
+:::
+:::
+
+---
+
+## Field Types {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="50%"}
+**Text & Numbers**
+
+| Field | Use case |
+|---|---|
+| `CharField` | Short strings (max_length required) |
+| `TextField` | Long text / paragraphs |
+| `IntegerField` | Whole numbers |
+| `FloatField` | Floating-point |
+| `DecimalField` | Precise decimals (finance) |
+| `BooleanField` | True / False |
+| `SlugField` | URL-friendly string |
+| `EmailField` | Validated email |
+| `URLField` | Validated URL |
+
+:::
+
+::: {.column width="50%"}
+**Date, Files & Relations**
+
+| Field | Use case |
+|---|---|
+| `DateField` | Date only |
+| `DateTimeField` | Date + time |
+| `TimeField` | Time only |
+| `ImageField` | Image upload |
+| `FileField` | Any file upload |
+| `ForeignKey` | Many-to-one |
+| `ManyToManyField` | Many-to-many |
+| `OneToOneField` | One-to-one |
+| `JSONField` | JSON data |
+
+::: {.fragment}
+> All fields accept `null=True`, `blank=True`, `default=`, `verbose_name=`, `help_text=`
+:::
+:::
+:::
+
+---
+
+## ORM QuerySets {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# CREATE
+post = Post.objects.create(title="Hello", content="World")
+# or
+post = Post(title="Hello"); post.save()
+
+# READ — lazy evaluation
+Post.objects.all()                        # all rows
+Post.objects.filter(status='published')   # WHERE status='published'
+Post.objects.exclude(status='draft')      # WHERE NOT status='draft'
+Post.objects.get(pk=1)                    # single (raises if missing)
+Post.objects.order_by('-created_at')      # ORDER BY DESC
+Post.objects.select_related('author')     # JOIN (FK)
+Post.objects.prefetch_related('tags')     # prefetch M2M
+
+# FILTER lookups
+Post.objects.filter(title__contains='Django')
+Post.objects.filter(created_at__year=2025)
+Post.objects.filter(author__username='alice')
+
+# UPDATE
+Post.objects.filter(status='draft').update(status='published')
+
+# DELETE
+Post.objects.filter(status='archived').delete()
+
+# AGGREGATE
+from django.db.models import Count, Avg
+Post.objects.aggregate(total=Count('id'))
+Post.objects.values('category').annotate(n=Count('id'))
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    MGR["Post.objects<br/>(Manager)"] --> QS["QuerySet<br/>(lazy)"]
+    QS --> FILTER["filter()"]
+    QS --> EXCLUDE["exclude()"]
+    QS --> ORDER["order_by()"]
+    QS --> VALUES["values() / values_list()"]
+    QS --> ANNOTATE["annotate()"]
+    QS --> AGGREGATE["aggregate() → dict"]
+    QS --> SELECT["select_related()<br/>prefetch_related()"]
+    FILTER --> EVAL["Evaluation<br/>(iteration, slice,<br/>len, bool, get)"]
+    EXCLUDE --> EVAL
+    ORDER  --> EVAL
+    VALUES --> EVAL
+    EVAL --> SQL["SQL Query → DB"]
+
+    classDef mgr   fill:#e94560,stroke:none,color:#fff
+    classDef qs    fill:#533483,stroke:none,color:#fff
+    classDef op    fill:#0f3460,stroke:#aaa,color:#fff
+    classDef term  fill:#16213e,stroke:#2ecc71,color:#fff
+    class MGR mgr
+    class QS qs
+    class FILTER,EXCLUDE,ORDER,VALUES,ANNOTATE,AGGREGATE,SELECT op
+    class EVAL,SQL term
+```
+:::
+:::
+:::
+
+---
+
+## Migrations {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+Migrations are Django's way of **propagating model changes** to the database schema.
+
+```bash
+# 1. Create migration files from model changes
+python manage.py makemigrations
+
+# 2. Apply pending migrations to DB
+python manage.py migrate
+
+# 3. Show migration status
+python manage.py showmigrations
+
+# 4. Inspect SQL for a migration
+python manage.py sqlmigrate blog 0001
+
+# 5. Roll back to a specific migration
+python manage.py migrate blog 0002
+
+# 6. Squash migrations
+python manage.py squashmigrations blog 0001 0005
+```
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    A["Edit<br/>models.py"] --> B["makemigrations<br/>→ 0001_initial.py"]
+    B --> C["migrate<br/>→ CREATE TABLE"]
+    C --> D["Edit model<br/>(add field)"]
+    D --> E["makemigrations<br/>→ 0002_add_field.py"]
+    E --> F["migrate<br/>→ ALTER TABLE"]
+
+    classDef edit  fill:#e94560,stroke:none,color:#fff
+    classDef cmd   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef db    fill:#533483,stroke:none,color:#fff
+    class A,D edit
+    class B,E cmd
+    class C,F db
+```
+:::
+
+::: {.fragment}
+**Dependency graph of migrations:**
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    AUTH["auth 0001"] --> AUTH2["auth 0002"]
+    BLOG1["blog 0001"] -->|depends on| AUTH["auth 0001"]
+    BLOG1 --> BLOG2["blog 0002"]
+    BLOG2 --> BLOG3["blog 0003"]
+
+    classDef auth fill:#533483,stroke:none,color:#fff
+    classDef blog fill:#0f3460,stroke:#e94560,color:#fff
+    class AUTH,AUTH2 auth
+    class BLOG1,BLOG2,BLOG3 blog
+```
+:::
+:::
+:::
+
+---
+
+## Templates & DTL {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**`templates/blog/base.html`**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}My Blog{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <nav>{% include 'partials/_nav.html' %}</nav>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer>{% block footer %}© 2025{% endblock %}</footer>
+</body>
+</html>
+```
+
+::: {.fragment}
+**`templates/blog/index.html`**
+```html
+{% extends 'blog/base.html' %}
+
+{% block title %}Posts — {{ block.super }}{% endblock %}
+
+{% block content %}
+  {% for post in posts %}
+    <article>
+      <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+      <p>By {{ post.author.get_full_name }} · {{ post.created_at|date:"M d, Y" }}</p>
+      <p>{{ post.content|truncatewords:30 }}</p>
+    </article>
+  {% empty %}
+    <p>No posts yet.</p>
+  {% endfor %}
+
+  {% if is_paginated %}
+    {% include 'partials/_pagination.html' %}
+  {% endif %}
+{% endblock %}
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+**DTL Syntax Summary**
+
+| Syntax | Purpose |
+|---|---|
+| `{{ var }}` | Output variable |
+| `{{ var\|filter }}` | Apply filter |
+| `{% tag %}` | Logic / control |
+| `{# comment #}` | Template comment |
+
+**Common filters:**
+```
+{{ name|upper }}          → ALICE
+{{ date|date:"Y-m-d" }}   → 2025-01-15
+{{ text|truncatewords:20 }}
+{{ price|floatformat:2 }} → 9.99
+{{ html|safe }}           → unescaped HTML
+{{ list|join:", " }}      → a, b, c
+```
+:::
+:::
+:::
+
+---
+
+## Template Inheritance {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    BASE["base.html<br/>{% block title %}<br/>{% block content %}<br/>{% block footer %}"]
+    BASE --> BLOG_BASE["blog/base.html<br/>{% extends 'base.html' %}<br/>{% block content %}<br/>  nav + sidebar<br/>{% endblock %}"]
+    BASE --> AUTH_BASE["auth/base.html<br/>{% extends 'base.html' %}<br/>{% block content %}<br/>  centered card<br/>{% endblock %}"]
+    BLOG_BASE --> INDEX["blog/index.html<br/>{% extends 'blog/base.html' %}<br/>{% block content %}<br/>  post list<br/>{% endblock %}"]
+    BLOG_BASE --> DETAIL["blog/detail.html<br/>{% extends 'blog/base.html' %}<br/>{% block content %}<br/>  post detail<br/>{% endblock %}"]
+    AUTH_BASE --> LOGIN["auth/login.html<br/>{% extends 'auth/base.html' %}"]
+    AUTH_BASE --> REGISTER["auth/register.html<br/>{% extends 'auth/base.html' %}"]
+    PARTIAL(["_nav.html<br/>_pagination.html<br/>_flash.html<br/>(partials via include)"]) -.->|"{% include %}"| BLOG_BASE
+
+    classDef base     fill:#e94560,stroke:none,color:#fff
+    classDef mid      fill:#533483,stroke:none,color:#fff
+    classDef leaf     fill:#0f3460,stroke:#aaa,color:#fff
+    classDef partial  fill:#1a1a2e,stroke:#aaa,color:#aaa,stroke-dasharray:4
+    class BASE base
+    class BLOG_BASE,AUTH_BASE mid
+    class INDEX,DETAIL,LOGIN,REGISTER leaf
+    class PARTIAL partial
+```
+
+---
+
+## Forms {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+**`forms.py`**
+```python
+from django import forms
+from .models import Post
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model   = Post
+        fields  = ['title', 'slug', 'category', 'content', 'status']
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 8}),
+            'slug':    forms.TextInput(attrs={'placeholder': 'auto-generated'}),
+        }
+        labels  = {'status': 'Publication Status'}
+
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if len(title) < 5:
+            raise forms.ValidationError("Title must be at least 5 characters.")
+        return title.strip()
+
+    def clean(self):
+        cleaned = super().clean()
+        title   = cleaned.get('title', '')
+        slug    = cleaned.get('slug', '')
+        if title and not slug:
+            from django.utils.text import slugify
+            cleaned['slug'] = slugify(title)
+        return cleaned
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    POST["POST data /<br/>files"] --> BIND["Bind to Form<br/>form = PostForm(request.POST)"]
+    BIND --> VALID["form.is_valid()"]
+    VALID -->|calls| FIELD["Field.clean()<br/>(type coercion<br/>+ field validators)"]
+    FIELD --> FORM_FIELD["clean_&lt;fieldname&gt;()<br/>(per-field custom logic)"]
+    FORM_FIELD --> CLEAN["clean()<br/>(cross-field validation)"]
+    CLEAN -->|pass| DATA["form.cleaned_data<br/>(safe Python values)"]
+    CLEAN -->|fail| ERRORS["form.errors<br/>(render back to user)"]
+    DATA --> SAVE["form.save()<br/>→ Model instance"]
+
+    classDef input  fill:#e94560,stroke:none,color:#fff
+    classDef step   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef output fill:#16213e,stroke:#2ecc71,color:#fff
+    classDef err    fill:#533483,stroke:none,color:#fff
+    class POST,BIND input
+    class VALID,FIELD,FORM_FIELD,CLEAN step
+    class DATA,SAVE output
+    class ERRORS err
+```
+:::
+:::
+:::
+
+---
+
+## Django Admin {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# blog/admin.py
+from django.contrib import admin
+from .models import Post, Category, Tag
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display   = ['title', 'author', 'status', 'created_at']
+    list_filter    = ['status', 'category', 'created_at']
+    search_fields  = ['title', 'content', 'author__username']
+    prepopulated_fields = {'slug': ('title',)}
+    raw_id_fields  = ['author']
+    date_hierarchy = 'created_at'
+    ordering       = ['-created_at']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'slug', 'content', 'category', 'tags')
+        }),
+        ('Meta', {
+            'fields': ('author', 'status', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    actions = ['make_published']
+
+    def make_published(self, request, queryset):
+        queryset.update(status='published')
+    make_published.short_description = "Mark selected posts as published"
+
+admin.site.register(Category)
+admin.site.register(Tag)
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    ADMIN["Django Admin Site<br/>/admin/"] --> LIST["Change List View<br/>list_display<br/>list_filter<br/>search_fields"]
+    ADMIN --> DETAIL["Change Form View<br/>fieldsets<br/>prepopulated_fields<br/>readonly_fields"]
+    ADMIN --> ACTIONS["Bulk Actions<br/>delete<br/>custom actions"]
+    LIST --> INLINE["Inline Models<br/>TabularInline<br/>StackedInline"]
+    DETAIL --> INLINE
+
+    classDef root  fill:#e94560,stroke:none,color:#fff
+    classDef node  fill:#0f3460,stroke:#aaa,color:#fff
+    class ADMIN root
+    class LIST,DETAIL,ACTIONS,INLINE node
+```
+:::
+
+::: {.fragment}
+**Setup:**
+```bash
+python manage.py createsuperuser
+# → visit /admin/
+```
+Admin auto-generates full **CRUD** for every registered model.
+:::
+:::
+:::
+
+---
+
+## Authentication & Authorization {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# Using built-in auth views (urls.py)
+from django.contrib.auth import views as auth_views
+
+urlpatterns = [
+    path('login/',    auth_views.LoginView.as_view(),  name='login'),
+    path('logout/',   auth_views.LogoutView.as_view(), name='logout'),
+    path('password/', auth_views.PasswordChangeView.as_view()),
+]
+
+# Protecting views
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
+@login_required
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+@permission_required('blog.add_post', raise_exception=True)
+def create_post(request): ...
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    login_url = '/login/'
+    model     = Post
+    fields    = ['title', 'content']
+```
+
+::: {.fragment}
+```python
+# Custom User model (do this early!)
+# models.py
+from django.contrib.auth.models import AbstractUser
+
+class CustomUser(AbstractUser):
+    bio    = models.TextField(blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True)
+
+# settings.py
+AUTH_USER_MODEL = 'accounts.CustomUser'
+```
+:::
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    USER["User"] -->|belongs to| GROUPS["Groups"]
+    GROUPS -->|has| PERMS["Permissions<br/>(app.action_model)"]
+    USER -->|direct| PERMS
+    PERMS -->|checked by| DECORATOR["@login_required<br/>@permission_required<br/>LoginRequiredMixin"]
+    DECORATOR -->|controls| VIEW["View Access"]
+
+    classDef user fill:#e94560,stroke:none,color:#fff
+    classDef perm fill:#533483,stroke:none,color:#fff
+    classDef ctrl fill:#0f3460,stroke:#aaa,color:#fff
+    class USER user
+    class GROUPS,PERMS perm
+    class DECORATOR,VIEW ctrl
+```
+:::
+
+::: {.fragment}
+**Built-in permissions per model:**  
+`blog.add_post`  
+`blog.view_post`  
+`blog.change_post`  
+`blog.delete_post`
+:::
+:::
+:::
+
+---
+
+## Middleware {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+Middleware is a **hook into Django's request/response processing** — a lightweight plugin system.
+
+```python
+# settings.py
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+```
+
+::: {.fragment}
+**Custom middleware:**
+```python
+class TimingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        import time
+        start = time.time()
+        response = self.get_response(request)
+        duration = time.time() - start
+        response['X-Duration-Ms'] = int(duration * 1000)
+        return response
+```
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    REQ["Incoming Request"] --> MW1["SecurityMiddleware<br/>process_request ↓"]
+    MW1 --> MW2["SessionMiddleware<br/>process_request ↓"]
+    MW2 --> MW3["AuthMiddleware<br/>process_request ↓"]
+    MW3 --> VIEW["View Function"]
+    VIEW --> MW3R["AuthMiddleware<br/>↑ process_response"]
+    MW3R --> MW2R["SessionMiddleware<br/>↑ process_response"]
+    MW2R --> MW1R["SecurityMiddleware<br/>↑ process_response"]
+    MW1R --> RES["Outgoing Response"]
+
+    classDef req  fill:#e94560,stroke:none,color:#fff
+    classDef mw   fill:#0f3460,stroke:#aaa,color:#fff
+    classDef view fill:#533483,stroke:none,color:#fff
+    classDef res  fill:#16213e,stroke:#2ecc71,color:#fff
+    class REQ req
+    class MW1,MW2,MW3,MW1R,MW2R,MW3R mw
+    class VIEW view
+    class RES res
+```
+:::
+:::
+:::
+
+---
+
+## Signals {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+Signals allow **decoupled components** to react to events elsewhere in the application.
+
+```python
+from django.db.models.signals import post_save, pre_delete
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+from .models import Post
+
+# Auto-create a user profile when a new user is created
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+# Send notification when a post is published
+@receiver(post_save, sender=Post)
+def notify_on_publish(sender, instance, **kwargs):
+    if instance.status == 'published':
+        send_notification(instance.author, instance)
+
+# Log deletions
+@receiver(pre_delete, sender=Post)
+def log_post_deletion(sender, instance, **kwargs):
+    AuditLog.objects.create(
+        action='delete',
+        model='Post',
+        object_id=instance.pk,
+    )
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    SENDER["Sender<br/>(Model / View)"] -->|fires| SIGNAL["Signal<br/>(post_save<br/>pre_delete<br/>request_started...)"]
+    SIGNAL -->|dispatches to| R1["Receiver 1<br/>create_profile()"]
+    SIGNAL -->|dispatches to| R2["Receiver 2<br/>notify_on_publish()"]
+    SIGNAL -->|dispatches to| R3["Receiver 3<br/>log_deletion()"]
+
+    classDef sender fill:#e94560,stroke:none,color:#fff
+    classDef sig    fill:#533483,stroke:none,color:#fff
+    classDef recv   fill:#0f3460,stroke:#aaa,color:#fff
+    class SENDER sender
+    class SIGNAL sig
+    class R1,R2,R3 recv
+```
+:::
+
+::: {.fragment}
+**Built-in signals:**
+
+- `pre_save` / `post_save`
+- `pre_delete` / `post_delete`
+- `m2m_changed`
+- `request_started` / `request_finished`
+- `user_logged_in` / `user_logged_out`
+:::
+:::
+:::
+
+---
+
+## Caching {.scrollable background-color="#0f3460"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# settings.py — Redis cache backend
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+
+# Per-view caching (decorator)
+from django.views.decorators.cache import cache_page
+
+@cache_page(60 * 15)   # cache for 15 minutes
+def post_list(request):
+    ...
+
+# Low-level cache API
+from django.core.cache import cache
+
+def get_popular_posts():
+    key = 'popular_posts'
+    posts = cache.get(key)
+    if posts is None:
+        posts = list(
+            Post.objects.annotate(views=Count('view'))
+                        .order_by('-views')[:10]
+        )
+        cache.set(key, posts, timeout=300)
+    return posts
+
+# Template fragment caching
+# {% load cache %}
+# {% cache 300 sidebar user.id %}
+#   ... expensive sidebar ...
+# {% endcache %}
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    REQ["Request"] --> CHECK{"Cache hit?"}
+    CHECK -->|HIT| CACHED["Return cached<br/>response instantly"]
+    CHECK -->|MISS| VIEW["Execute View<br/>+ DB queries"]
+    VIEW --> STORE["Store in cache<br/>(Redis / Memcached)"]
+    STORE --> RES["Return response"]
+    CACHED --> RES
+
+    classDef req   fill:#e94560,stroke:none,color:#fff
+    classDef check fill:#533483,stroke:none,color:#fff
+    classDef hit   fill:#0a3d0a,stroke:#2ecc71,color:#fff
+    classDef miss  fill:#0f3460,stroke:#aaa,color:#fff
+    class REQ req
+    class CHECK check
+    class CACHED,RES hit
+    class VIEW,STORE miss
+```
+:::
+
+::: {.fragment}
+**Cache levels:**
+- **Per-site** — entire site cached
+- **Per-view** — `@cache_page`
+- **Template fragment** — `{% cache %}`
+- **Low-level API** — `cache.get/set`
+:::
+:::
+:::
+
+---
+
+## Django REST Framework (DRF) {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+# pip install djangorestframework
+# INSTALLED_APPS: 'rest_framework'
+
+from rest_framework import serializers, viewsets, routers
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
+class PostSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField()
+
+    class Meta:
+        model  = Post
+        fields = ['id', 'title', 'slug', 'author',
+                  'content', 'status', 'created_at']
+        read_only_fields = ['created_at']
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset           = Post.objects.all().order_by('-created_at')
+    serializer_class   = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+# urls.py
+router = routers.DefaultRouter()
+router.register(r'posts', PostViewSet)
+
+urlpatterns = [
+    path('api/', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls')),
+]
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    CLIENT["Client<br/>(Browser / App)"] -->|HTTP JSON| ROUTER["DRF Router<br/>/api/posts/<br/>/api/posts/1/"]
+    ROUTER --> VS["ViewSet<br/>list / create<br/>retrieve / update<br/>destroy"]
+    VS --> PERM["Permission Classes<br/>IsAuthenticated<br/>IsAdminUser"]
+    VS --> THROTTLE["Throttle Classes<br/>rate limiting"]
+    VS --> SER["Serializer<br/>validate + serialize<br/>deserialize"]
+    SER --> MODEL["Model / ORM"]
+    MODEL --> SER
+    SER --> VS
+    VS --> CLIENT
+
+    classDef client fill:#e94560,stroke:none,color:#fff
+    classDef drf    fill:#533483,stroke:none,color:#fff
+    classDef layer  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef model  fill:#16213e,stroke:#aaa,color:#ccc
+    class CLIENT client
+    class ROUTER,VS drf
+    class PERM,THROTTLE,SER layer
+    class MODEL model
+```
+:::
+
+::: {.fragment}
+**Auto-generated endpoints:**  
+`GET /api/posts/` — list  
+`POST /api/posts/` — create  
+`GET /api/posts/1/` — retrieve  
+`PUT /api/posts/1/` — update  
+`PATCH /api/posts/1/` — partial update  
+`DELETE /api/posts/1/` — destroy  
+:::
+:::
+:::
+
+---
+
+## Testing {.scrollable background-color="#16213e"}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth.models import User
+from .models import Post, Category
+
+class PostModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='alice', password='pass'
+        )
+        self.cat = Category.objects.create(name='Tech', slug='tech')
+
+    def test_post_creation(self):
+        post = Post.objects.create(
+            title='Test Post', slug='test-post',
+            author=self.user, category=self.cat,
+            content='Hello world', status='published'
+        )
+        self.assertEqual(str(post), 'Test Post')
+        self.assertEqual(Post.objects.count(), 1)
+
+class PostViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('bob', password='pass')
+
+    def test_index_view(self):
+        res = self.client.get(reverse('blog:index'))
+        self.assertEqual(res.status_code, 200)
+        self.assertTemplateUsed(res, 'blog/index.html')
+
+    def test_create_requires_login(self):
+        res = self.client.get(reverse('blog:create'))
+        self.assertRedirects(res, '/login/?next=/blog/new/')
+```
+:::
+
+::: {.column width="45%"}
+::: {.fragment}
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    SUITE["Test Suite<br/>python manage.py test"] --> UNIT["Unit Tests<br/>TestCase<br/>(models, forms,<br/>utils)"]
+    SUITE --> INT["Integration Tests<br/>Client()<br/>(views, URLs,<br/>templates)"]
+    SUITE --> API["API Tests<br/>APIClient()<br/>(DRF endpoints)"]
+
+    UNIT --> ASSERT["Assertions<br/>assertEqual<br/>assertContains<br/>assertRaises<br/>assertTemplateUsed"]
+    INT  --> ASSERT
+    API  --> ASSERT
+
+    classDef root   fill:#e94560,stroke:none,color:#fff
+    classDef type   fill:#533483,stroke:none,color:#fff
+    classDef assert fill:#0f3460,stroke:#aaa,color:#fff
+    class SUITE root
+    class UNIT,INT,API type
+    class ASSERT assert
+```
+:::
+
+::: {.fragment}
+```bash
+python manage.py test             # all tests
+python manage.py test blog        # app only
+python manage.py test blog.tests.PostModelTest
+coverage run manage.py test && coverage report
+```
+:::
+:::
+:::
+
+---
+
+## Deployment Architecture {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'orthogonal'}}}%%
+graph TD
+    USER["🌐 Users"] -->|HTTPS| CDN["CDN<br/>(CloudFront / Cloudflare)<br/>Static + Media files"]
+    USER -->|HTTPS| LB["Load Balancer<br/>(Nginx / AWS ALB)"]
+    LB  -->|HTTP| GUNICORN["Gunicorn / uWSGI<br/>(WSGI/ASGI Workers)"]
+    GUNICORN -->|WSGI| DJANGO["Django Application"]
+    DJANGO  -->|ORM| DB["PostgreSQL<br/>(Primary)"]
+    DB      -->|replication| DBREP["PostgreSQL Replica<br/>(Read-only)"]
+    DJANGO  -->|cache| REDIS["Redis<br/>(Cache + Sessions)"]
+    DJANGO  -->|queue| CELERY["Celery Workers<br/>(Async Tasks)"]
+    CELERY  -->|broker| REDIS
+    DJANGO  -->|store| S3["Object Storage<br/>(S3 / GCS)<br/>Media files"]
+    CDN     -.-> S3
+
+    classDef user    fill:#e94560,stroke:none,color:#fff
+    classDef infra   fill:#533483,stroke:none,color:#fff
+    classDef app     fill:#0f3460,stroke:#aaa,color:#fff
+    classDef data    fill:#16213e,stroke:#2ecc71,color:#fff
+    class USER user
+    class CDN,LB,GUNICORN infra
+    class DJANGO,CELERY app
+    class DB,DBREP,REDIS,S3 data
+```
+
+---
+
+## Production Checklist {.scrollable background-color="#1a1a2e"}
+
+::: {.columns}
+::: {.column width="50%"}
+**Security**
+
+- [ ] `DEBUG = False`
+- [ ] `SECRET_KEY` from env variable
+- [ ] `ALLOWED_HOSTS` configured
+- [ ] `SECURE_SSL_REDIRECT = True`
+- [ ] `CSRF_COOKIE_SECURE = True`
+- [ ] `SESSION_COOKIE_SECURE = True`
+- [ ] `SECURE_HSTS_SECONDS = 31536000`
+- [ ] `X_FRAME_OPTIONS = 'DENY'`
+
+**Database**
+
+- [ ] PostgreSQL (not SQLite)
+- [ ] DB credentials from env variables
+- [ ] Connection pooling (pgBouncer)
+- [ ] Regular backups scheduled
+:::
+
+::: {.column width="50%"}
+**Performance**
+
+- [ ] Caching backend configured (Redis)
+- [ ] Static files — `collectstatic` + CDN
+- [ ] Media files — S3 / GCS
+- [ ] `select_related` / `prefetch_related` used
+- [ ] Database indexes on filtered fields
+
+**Operations**
+
+- [ ] `gunicorn` or `uvicorn` as WSGI/ASGI server
+- [ ] Nginx as reverse proxy
+- [ ] Environment variables via `.env` / secrets manager
+- [ ] Logging configured (`LOGGING` setting)
+- [ ] Health-check endpoint
+- [ ] Celery for async tasks
+- [ ] Monitoring (Sentry, Datadog)
+:::
+:::
+
+---
+
+## Django Ecosystem {.scrollable background-color="#16213e"}
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+mindmap
+  root((Django<br/>Ecosystem))
+    API
+      djangorestframework
+      django-ninja
+      drf-spectacular
+    Auth
+      django-allauth
+      social-auth-app-django
+      dj-rest-auth
+    Database
+      django-environ
+      django-extensions
+      psycopg2
+    Files & Storage
+      django-storages
+      Pillow
+      django-imagekit
+    Tasks & Scheduling
+      celery
+      django-celery-beat
+      django-q
+    Frontend
+      django-htmx
+      django-crispy-forms
+      django-widget-tweaks
+    Testing
+      factory-boy
+      pytest-django
+      model-bakery
+    Performance
+      django-debug-toolbar
+      django-silk
+      whitenoise
+    Deployment
+      gunicorn
+      uvicorn
+      whitenoise
+```
+
+---
+
+## Summary {.scrollable background-color="#0f3460"}
+
+```{mermaid}
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    subgraph REQUEST["Request Phase ▶"]
+        MW1["Middleware<br/>(in)"] --> URL["URL Dispatcher"]
+        URL --> VIEW["View"]
+    end
+
+    subgraph DATA["Data Layer"]
+        VIEW --> ORM["ORM / Models"]
+        ORM --> DB[(Database)]
+        DB --> ORM
+        ORM --> VIEW
+        VIEW --> CACHE["Cache<br/>(Redis)"]
+        CACHE --> VIEW
+    end
+
+    subgraph RESPONSE["◀ Response Phase"]
+        VIEW --> FORM_VAL["Form Validation"]
+        FORM_VAL --> TMPL["Template Engine"]
+        TMPL --> MW2["Middleware<br/>(out)"]
+        MW2 --> CLIENT["Client"]
+    end
+
+    subgraph ASYNC["Async"]
+        VIEW --> SIGNAL["Signals"]
+        SIGNAL --> CELERY["Celery Tasks"]
+    end
+
+    classDef req   fill:#e94560,stroke:none,color:#fff
+    classDef data  fill:#0f3460,stroke:#aaa,color:#fff
+    classDef resp  fill:#533483,stroke:none,color:#fff
+    classDef async fill:#16213e,stroke:#2ecc71,color:#fff
+```
+
+::: {.fragment}
+**Key Takeaways:**
+
+- MVT pattern separates concerns cleanly
+- ORM abstracts database entirely — write Python, not SQL
+- Admin panel is production-ready out-of-the-box
+- Rich ecosystem — REST APIs, async tasks, caching, auth — all covered
+- "Batteries included" philosophy accelerates development dramatically
+:::
