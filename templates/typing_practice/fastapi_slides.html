@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}FastAPI: Code Snippets – InstaCode{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-xl mx-auto px-4 py-8 space-y-10">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold font-mono text-white flex items-center gap-2">
+        <i class="fa-solid fa-bolt text-teal-400"></i>
+        FastAPI: Code Snippets
+      </h1>
+      <p class="text-gray-500 text-sm mt-1">
+        Reinforce FastAPI by typing real code — routing, Pydantic, async SQLAlchemy, JWT, WebSockets, and more.
+        {% if total %}<span class="text-teal-400 font-semibold">{{ total }} snippets</span> ready.{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'typing_practice:tracks' %}"
+       class="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1 transition-colors">
+      <i class="fa-solid fa-layer-group mr-1"></i>All Tracks
+    </a>
+  </div>
+
+  <!-- ── Category overview cards ───────────────────────────────────────── -->
+  <div class="grid grid-cols-2 gap-4">
+    {% for section in sections %}
+    <a href="#section-{{ section.slug }}"
+       class="bg-gray-900 border border-gray-800 hover:border-teal-700/50 rounded-xl p-4 transition-colors group">
+      <div class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 group-hover:text-teal-400 transition-colors">
+        {{ section.label }}
+      </div>
+      <div class="text-lg font-bold font-mono text-white">{{ section.count }}</div>
+      <div class="text-xs text-gray-400 truncate">{{ section.name }}</div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if total == 0 %}
+  <!-- Not seeded yet -->
+  <div class="bg-yellow-900/20 border border-yellow-700/50 rounded-xl p-6 text-center">
+    <i class="fa-solid fa-triangle-exclamation text-yellow-400 text-2xl mb-3"></i>
+    <p class="text-yellow-300 font-semibold mb-1">Snippets not seeded yet</p>
+    <p class="text-gray-400 text-sm mb-4">
+      Run the management command to load all FastAPI snippets:
+    </p>
+    <code class="block bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm font-mono text-brand-300 text-left inline-block">
+      python manage.py seed_fastapi_snippets
+    </code>
+    <p class="text-gray-500 text-xs mt-3">
+      Or with a custom file path:
+      <code class="text-gray-400">python manage.py seed_fastapi_snippets --file /path/to/fastapi.qmd</code>
+    </p>
+  </div>
+  {% else %}
+
+  <!-- ── Snippet sections ──────────────────────────────────────────────── -->
+  {% for section in sections %}
+  {% if section.count > 0 %}
+  <section id="section-{{ section.slug }}">
+
+    <!-- Section header -->
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold uppercase tracking-widest {{ section.badge }} px-2 py-0.5 rounded-full border border-current/20">
+          {{ section.label }}
+        </span>
+        <h2 class="text-base font-bold font-mono text-white">{{ section.name }}</h2>
+      </div>
+      <div class="flex-1 h-px bg-gray-800"></div>
+      <span class="text-xs text-gray-500">{{ section.count }} snippets</span>
+    </div>
+
+    <!-- Snippet cards grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for snippet in section.snippets %}
+      <a href="{% url 'typing_practice:practice' snippet.pk %}"
+         class="group bg-gray-900 border border-gray-800 hover:border-teal-700/60 rounded-xl p-4 transition-all hover:shadow-lg hover:shadow-teal-900/10 flex flex-col gap-2">
+
+        <!-- Slide number + difficulty -->
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-400 font-mono">
+            {{ snippet.title|truncatewords:1 }}
+          </span>
+          <span class="text-xs px-2 py-0.5 rounded-full
+            {% if snippet.difficulty == 'Easy' %}bg-green-900/30 text-green-400
+            {% elif snippet.difficulty == 'Medium' %}bg-yellow-900/30 text-yellow-400
+            {% else %}bg-red-900/30 text-red-400{% endif %}">
+            {{ snippet.difficulty }}
+          </span>
+        </div>
+
+        <!-- Slide title -->
+        <p class="text-sm text-gray-200 group-hover:text-white transition-colors leading-snug font-mono">
+          {{ snippet.title|truncatechars:70 }}
+        </p>
+
+        <!-- Practice prompt -->
+        <div class="mt-auto pt-1 flex items-center gap-1 text-xs text-gray-500 group-hover:text-teal-400 transition-colors">
+          <i class="fa-solid fa-keyboard text-[10px]"></i> Type to practice
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+  </section>
+  {% endif %}
+  {% endfor %}
+
+  {% endif %}
+
+</div>
+{% endblock %}

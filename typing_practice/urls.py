@@ -3,6 +3,7 @@ from .views import (
     HomeView, PracticeView, StatsAPIView, StatsHistoryView,
     DashboardView, ResourcesView, TracksView, TrackDetailView,
     PlaygroundView, ManageSnippetView, InterviewView, DsaInterviewView,
+    DjangoSlideView, FastApiSlideView, DsaSlideView,
     UserManagementView, UserCreateView, UserEditView, UserDeleteView,
 )
 
@@ -22,6 +23,10 @@ urlpatterns = [
     # Interview Q&A
     path("interview/", InterviewView.as_view(), name="interview"),
     path("dsa-interview/", DsaInterviewView.as_view(), name="dsa_interview"),
+    # Framework slide Q&A
+    path("django/", DjangoSlideView.as_view(), name="django_slides"),
+    path("fastapi/", FastApiSlideView.as_view(), name="fastapi_slides"),
+    path("dsa/", DsaSlideView.as_view(), name="dsa_slides"),
     # User management (staff only)
     path("users/", UserManagementView.as_view(), name="user_list"),
     path("users/create/", UserCreateView.as_view(), name="user_create"),

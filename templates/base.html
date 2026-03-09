@@ -93,6 +93,15 @@
         <a href="{% url 'typing_practice:dsa_interview' %}" class="hover:text-amber-400 transition-colors">
           <i class="fa-solid fa-diagram-project mr-1"></i>DSA
         </a>
+        <a href="{% url 'typing_practice:django_slides' %}" class="hover:text-blue-400 transition-colors">
+          <i class="fa-brands fa-python mr-1"></i>Django
+        </a>
+        <a href="{% url 'typing_practice:fastapi_slides' %}" class="hover:text-teal-400 transition-colors">
+          <i class="fa-solid fa-bolt mr-1"></i>FastAPI
+        </a>
+        <a href="{% url 'typing_practice:dsa_slides' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-code-branch mr-1"></i>DSA
+        </a>
         {% if user.is_staff %}
         <a href="{% url 'typing_practice:manage_snippet' %}" class="hover:text-yellow-400 transition-colors">
           <i class="fa-solid fa-circle-plus mr-1"></i>Add Snippet

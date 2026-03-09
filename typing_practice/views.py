@@ -908,7 +908,102 @@ class InterviewView(LoginRequiredMixin, View):
 
 
 # ---------------------------------------------------------------------------
-# DSA Interview Q&A — 99 Python DSA interview questions browser (Q101–Q199)
+# Django Slides — snippets from the Django QMD slideshow
+# ---------------------------------------------------------------------------
+
+DJANGO_SLIDE_CATEGORIES = [
+    {"name": "Django: Core",     "slug": "django-slides-core",     "label": "Core",     "badge": "bg-blue-900/30 text-blue-400"},
+    {"name": "Django: Advanced", "slug": "django-slides-advanced",  "label": "Advanced", "badge": "bg-indigo-900/30 text-indigo-400"},
+]
+
+
+class DjangoSlideView(LoginRequiredMixin, View):
+    """Browse and practice Django slideshow code snippets."""
+
+    template_name = "typing_practice/django_slides.html"
+
+    def get(self, request):
+        sections = []
+        for meta in DJANGO_SLIDE_CATEGORIES:
+            try:
+                cat = Category.objects.get(slug=meta["slug"])
+                snippets = list(CodeSnippet.objects.filter(category=cat).order_by("title"))
+                sections.append({**meta, "snippets": snippets, "count": len(snippets)})
+            except Category.DoesNotExist:
+                sections.append({**meta, "snippets": [], "count": 0})
+
+        total = sum(s["count"] for s in sections)
+        return render(request, self.template_name, {
+            "sections": sections,
+            "total":    total,
+        })
+
+
+# ---------------------------------------------------------------------------
+# FastAPI Slides — snippets from the FastAPI QMD slideshow
+# ---------------------------------------------------------------------------
+
+FASTAPI_SLIDE_CATEGORIES = [
+    {"name": "FastAPI: Core",     "slug": "fastapi-slides-core",     "label": "Core",     "badge": "bg-teal-900/30 text-teal-400"},
+    {"name": "FastAPI: Advanced", "slug": "fastapi-slides-advanced",  "label": "Advanced", "badge": "bg-cyan-900/30 text-cyan-400"},
+]
+
+
+class FastApiSlideView(LoginRequiredMixin, View):
+    """Browse and practice FastAPI slideshow code snippets."""
+
+    template_name = "typing_practice/fastapi_slides.html"
+
+    def get(self, request):
+        sections = []
+        for meta in FASTAPI_SLIDE_CATEGORIES:
+            try:
+                cat = Category.objects.get(slug=meta["slug"])
+                snippets = list(CodeSnippet.objects.filter(category=cat).order_by("title"))
+                sections.append({**meta, "snippets": snippets, "count": len(snippets)})
+            except Category.DoesNotExist:
+                sections.append({**meta, "snippets": [], "count": 0})
+
+        total = sum(s["count"] for s in sections)
+        return render(request, self.template_name, {
+            "sections": sections,
+            "total":    total,
+        })
+
+
+# ---------------------------------------------------------------------------
+# DSA Slides — snippets from the DSA QMD slideshow
+# ---------------------------------------------------------------------------
+
+DSA_SLIDE_CATEGORIES = [
+    {"name": "DSA: Data Structures",       "slug": "dsa-data-structures",   "label": "Data Structures", "badge": "bg-brand-900/30 text-brand-400"},
+    {"name": "DSA: Algorithms",             "slug": "dsa-algorithms",         "label": "Algorithms",       "badge": "bg-green-900/30 text-green-400"},
+    {"name": "DSA: Patterns & Reference",   "slug": "dsa-patterns-reference",  "label": "Patterns",         "badge": "bg-purple-900/30 text-purple-400"},
+]
+
+
+class DsaSlideView(LoginRequiredMixin, View):
+    """Browse and practice DSA slideshow code snippets."""
+
+    template_name = "typing_practice/dsa_slides.html"
+
+    def get(self, request):
+        sections = []
+        for meta in DSA_SLIDE_CATEGORIES:
+            try:
+                cat = Category.objects.get(slug=meta["slug"])
+                snippets = list(CodeSnippet.objects.filter(category=cat).order_by("title"))
+                sections.append({**meta, "snippets": snippets, "count": len(snippets)})
+            except Category.DoesNotExist:
+                sections.append({**meta, "snippets": [], "count": 0})
+
+        total = sum(s["count"] for s in sections)
+        return render(request, self.template_name, {
+            "sections": sections,
+            "total":    total,
+        })
+
+
 # ---------------------------------------------------------------------------
 
 DSA_INTERVIEW_CATEGORIES = [
