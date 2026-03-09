@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Playground — {{ title }} – InstaCode{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"
+        integrity="sha512-ZG31AN9z/CQD1YDDAK4RUAvogwbJHv6bHrumrnMLzdCrVu4HeAqrUX7Jsal/cbUwXGfaMUNmQU04tQ8XXl5Znw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<style>
+  #monaco-container { height: 100%; }
+  .monaco-editor, .monaco-editor-background, .monaco-editor .margin { background-color: #0d0d1a !important; }
+  .metric-value { transition: color 0.2s; }
+  #flash-overlay {
+    pointer-events: none; position: absolute; inset: 0;
+    background: rgba(220, 38, 38, 0.18);
+    opacity: 0 !important; transition: opacity 0.16s ease !important;
+    z-index: 20; border-radius: 0.5rem;
+  }
+  #flash-overlay.flash { opacity: 1 !important; }
+  .key {
+    display: flex; align-items: center; justify-content: center;
+    min-width: 2.4rem; height: 2.4rem; padding: 0 0.5rem;
+    border-radius: 0.35rem; font-size: 0.7rem;
+    font-family: 'Fira Code', monospace;
+    background: #1e1e2e; border: 1px solid #3a3a5c; color: #9999bb;
+    user-select: none; transition: background 0.08s, transform 0.08s, border-color 0.08s;
+  }
+  .key.wide-3, .key.wide-4 { font-size: 0.65rem; }
+  @media (max-width: 900px) { .key.spacebar { min-width: 8rem !important; } }
+  .key.highlight-next { background: #065f46; border-color: #10b981; color: #6ee7b7; box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+  .key.pressed        { background: #1d4ed8; border-color: #60a5fa; color: #bfdbfe; transform: translateY(2px); }
+  .key.wide-1  { min-width: 3.2rem; }
+  .key.wide-2  { min-width: 4.2rem; }
+  .key.wide-3  { min-width: 5.2rem; }
+  .key.wide-4  { min-width: 6.5rem; }
+  .key.spacebar{ min-width: 14rem; }
+  #results-modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; }
+  #results-modal.open { display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Playground APP data (snippetId=0 → no stats saved) -->
+<div id="app-data"
+     data-snippet-id="0"
+     data-code="{{ code_json }}"
+     data-stats-url="{% url 'typing_practice:stats_api' %}"
+     class="hidden"></div>
+
+<div class="flex flex-col h-[calc(100vh-7.5rem)] px-4 py-4 gap-3 max-w-screen-2xl mx-auto">
+
+  <!-- ── Top control bar ──────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-center gap-3 bg-gray-900 rounded-xl px-5 py-3 border border-gray-800">
+
+    <!-- Playground badge + title -->
+    <div class="flex items-center gap-2 text-sm">
+      <span class="inline-flex items-center gap-1.5 bg-purple-900/40 border border-purple-700 text-purple-300 rounded-lg px-3 py-1 text-xs font-mono">
+        <i class="fa-solid fa-flask text-purple-400"></i>
+        Playground
+      </span>
+      <span class="text-gray-400 text-sm truncate max-w-48">{{ title }}</span>
+    </div>
+
+    <!-- Back link -->
+    <a href="{% url 'typing_practice:playground' %}"
+       class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+      <i class="fa-solid fa-pen-to-square"></i> Edit code
+    </a>
+
+    <!-- Typing mode toggle -->
+    <div class="flex items-center gap-2 text-sm">
+      <i class="fa-solid fa-sliders text-brand-400"></i>
+      <label class="text-gray-400 text-xs uppercase tracking-wide">Mode:</label>
+      <select id="typing-mode-select"
+              class="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500 cursor-pointer">
+        <option value="forced">Forced Correction</option>
+        <option value="natural">Natural</option>
+      </select>
+    </div>
+
+    <!-- Keyboard layout toggle -->
+    <div class="flex items-center gap-2 text-sm">
+      <i class="fa-solid fa-keyboard text-brand-400"></i>
+      <label class="text-gray-400 text-xs uppercase tracking-wide">Layout:</label>
+      <select id="kb-layout-select"
+              class="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500 cursor-pointer">
+        <option value="qwerty">QWERTY</option>
+        <option value="dvorak">Dvorak</option>
+        <option value="colemak">Colemak</option>
+      </select>
+    </div>
+
+    <!-- Spacer -->
+    <div class="flex-1"></div>
+
+    <!-- Metrics -->
+    <div class="flex items-center gap-6">
+      <div class="text-center">
+        <div id="metric-timer" class="metric-value text-xl font-bold font-mono text-brand-400">0:00</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-600">Time</div>
+      </div>
+      <div class="text-center">
+        <div id="metric-wpm" class="metric-value text-xl font-bold font-mono text-yellow-400">0</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-600">WPM</div>
+      </div>
+      <div class="text-center">
+        <div id="metric-acc" class="metric-value text-xl font-bold font-mono text-green-400">100%</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-600">Accuracy</div>
+      </div>
+    </div>
+
+    <!-- Auto-scroll toggle -->
+    <button id="scroll-toggle-btn" title="Toggle auto-scroll"
+            class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-brand-400 rounded-lg text-sm transition-colors">
+      <i class="fa-solid fa-scroll"></i>
+      <span id="scroll-toggle-label" class="text-xs">Follow</span>
+    </button>
+
+    <!-- Reset -->
+    <button id="reset-btn"
+            class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-sm transition-colors">
+      <i class="fa-solid fa-rotate-right"></i> Reset
+    </button>
+  </div>
+
+  <!-- ── Editor + flash overlay wrapper ───────────────────────────── -->
+  <div class="relative flex-1 min-h-0 rounded-xl overflow-hidden border border-gray-800">
+    <div id="flash-overlay"></div>
+    <div id="monaco-container" class="w-full h-full"></div>
+  </div>
+
+  <!-- ── Virtual Keyboard ──────────────────────────────────────────── -->
+  <div id="virtual-keyboard"
+       class="flex-none bg-gray-900 border border-gray-800 rounded-xl p-3 flex flex-col items-center gap-1.5 select-none overflow-x-auto">
+    <!-- Rows injected by JS -->
+  </div>
+
+</div>
+
+<!-- ── Post-game Results Modal ───────────────────────────────────────── -->
+<div id="results-modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+    <div class="text-center mb-6">
+      <div class="text-4xl mb-2">🎉</div>
+      <h2 class="text-2xl font-bold font-mono text-brand-400">Session Complete!</h2>
+      <p class="text-gray-500 text-sm mt-1">
+        <i class="fa-solid fa-flask text-purple-400 mr-1"></i>{{ title }}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-8">
+      <div class="text-center bg-gray-800 rounded-xl py-4">
+        <div id="result-wpm" class="text-3xl font-bold font-mono text-yellow-400">–</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">WPM</div>
+      </div>
+      <div class="text-center bg-gray-800 rounded-xl py-4">
+        <div id="result-acc" class="text-3xl font-bold font-mono text-green-400">–</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Accuracy</div>
+      </div>
+      <div class="text-center bg-gray-800 rounded-xl py-4">
+        <div id="result-time" class="text-3xl font-bold font-mono text-brand-400">–</div>
+        <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Seconds</div>
+      </div>
+    </div>
+
+    <p id="result-status" class="text-center text-sm text-gray-400 mb-6 min-h-[1.5rem]"></p>
+
+    <div class="flex gap-3">
+      <button id="modal-retry-btn"
+              class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2.5 rounded-xl transition-colors">
+        <i class="fa-solid fa-rotate-right mr-2"></i>Try Again
+      </button>
+      <a href="{% url 'typing_practice:playground' %}"
+         class="flex-1 text-center bg-purple-900/40 hover:bg-purple-900/60 border border-purple-700 text-purple-300 font-semibold py-2.5 rounded-xl transition-colors">
+        <i class="fa-solid fa-pen-to-square mr-2"></i>New Code
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const APP = (() => {
+    const el = document.getElementById('app-data');
+    return {
+      snippetId: 0,                           // 0 = playground, stats skipped
+      code:      JSON.parse(el.dataset.code),
+      statsUrl:  el.dataset.statsUrl,
+    };
+  })();
+</script>
+<script src="{% static 'typing_practice/js/keyboard.js' %}"></script>
+<script src="{% static 'typing_practice/js/engine.js' %}"></script>
+{% endblock %}

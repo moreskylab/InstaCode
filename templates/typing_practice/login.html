@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – InstaCode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { mono: ['"Fira Code"', '"Cascadia Code"', 'Consolas', 'monospace'] },
+          colors: {
+            brand: {
+              50: '#f0fdf9', 100: '#ccfbef',
+              400: '#34d8a1', 500: '#10b981',
+              600: '#059669', 700: '#047857', 900: '#064e3b',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="h-full bg-gray-950 text-gray-100 flex items-center justify-center">
+
+  <div class="w-full max-w-sm">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center gap-2 text-brand-400 font-bold text-2xl tracking-tight font-mono">
+        <i class="fa-solid fa-bolt-lightning"></i>InstaCode
+      </a>
+      <p class="text-gray-500 text-sm mt-2">Sign in to your account</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl">
+
+      {% if form.errors %}
+      <div class="mb-5 bg-red-900/30 border border-red-700 text-red-300 text-sm rounded-lg px-4 py-3 flex items-center gap-2">
+        <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
+        <span>Invalid username or password. Please try again.</span>
+      </div>
+      {% endif %}
+
+      {% if next %}
+      <div class="mb-5 bg-yellow-900/20 border border-yellow-700/50 text-yellow-400 text-sm rounded-lg px-4 py-3 flex items-center gap-2">
+        <i class="fa-solid fa-lock flex-shrink-0"></i>
+        <span>Please sign in to access this page.</span>
+      </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
+
+        <!-- Username -->
+        <div class="mb-5">
+          <label for="id_username" class="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
+            Username
+          </label>
+          <input
+            type="text" name="username" id="id_username"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-colors font-mono"
+            placeholder="your_username"
+            autocomplete="username" autofocus required
+          />
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
+          <label for="id_password" class="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
+            Password
+          </label>
+          <div class="relative">
+            <input
+              type="password" name="password" id="id_password"
+              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 pr-10 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-colors font-mono"
+              placeholder="••••••••"
+              autocomplete="current-password" required
+            />
+            <button type="button" onclick="togglePw()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors" tabindex="-1">
+              <i id="pw-eye" class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+        >
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function togglePw() {
+      const inp = document.getElementById('id_password');
+      const ico = document.getElementById('pw-eye');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.className = 'fa-solid fa-eye-slash text-xs';
+      } else {
+        inp.type = 'password';
+        ico.className = 'fa-solid fa-eye text-xs';
+      }
+    }
+  </script>
+</body>
+</html>

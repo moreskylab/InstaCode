@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Playground – InstaCode{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"
+        integrity="sha512-ZG31AN9z/CQD1YDDAK4RUAvogwbJHv6bHrumrnMLzdCrVu4HeAqrUX7Jsal/cbUwXGfaMUNmQU04tQ8XXl5Znw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  #paste-editor { height: 420px; border-radius: 0.5rem; overflow: hidden; }
+  .monaco-editor, .monaco-editor-background, .monaco-editor .margin {
+    background-color: #0d0d1a !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-10">
+
+  <!-- Header -->
+  <div class="mb-8 text-center">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-900/40 border border-purple-700 mb-4">
+      <i class="fa-solid fa-flask text-purple-400 text-2xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold font-mono text-white">Playground</h1>
+    <p class="text-gray-400 mt-2">Paste any code and practice typing it instantly. No account needed.</p>
+  </div>
+
+  {% if error %}
+  <div class="mb-6 bg-red-900/40 border border-red-700 text-red-300 rounded-xl px-5 py-3 flex items-center gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-400"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post" id="playground-form">
+    {% csrf_token %}
+
+    <!-- Title + Language row -->
+    <div class="flex flex-wrap gap-4 mb-5">
+      <div class="flex-1 min-w-48">
+        <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Snippet Title (optional)</label>
+        <input type="text" name="title"
+               value="{{ title_val|default:'' }}"
+               placeholder="My Custom Snippet"
+               maxlength="200"
+               class="w-full bg-gray-900 border border-gray-700 text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 transition-colors" />
+      </div>
+      <div class="w-48">
+        <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Language</label>
+        <select name="lang" id="lang-select"
+                class="w-full bg-gray-900 border border-gray-700 text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 cursor-pointer transition-colors">
+          <option value="python"    {% if lang_val == "python"     %}selected{% endif %}>Python</option>
+          <option value="javascript"{% if lang_val == "javascript" %}selected{% endif %}>JavaScript</option>
+          <option value="typescript"{% if lang_val == "typescript" %}selected{% endif %}>TypeScript</option>
+          <option value="java"      {% if lang_val == "java"       %}selected{% endif %}>Java</option>
+          <option value="cpp"       {% if lang_val == "cpp"        %}selected{% endif %}>C++</option>
+          <option value="rust"      {% if lang_val == "rust"       %}selected{% endif %}>Rust</option>
+          <option value="go"        {% if lang_val == "go"         %}selected{% endif %}>Go</option>
+          <option value="bash"      {% if lang_val == "bash"       %}selected{% endif %}>Bash</option>
+          <option value="plaintext" {% if lang_val == "plaintext"  %}selected{% endif %}>Plain Text</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Monaco paste editor -->
+    <div class="mb-5">
+      <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Code to Practice</label>
+      <div id="paste-editor" class="border border-gray-700 rounded-xl"></div>
+      <!-- Hidden textarea synced with Monaco -->
+      <textarea name="code" id="code-hidden" class="hidden">{{ code_val|default:'' }}</textarea>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button type="submit"
+              class="flex items-center gap-2 px-8 py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-brand-900/30">
+        <i class="fa-solid fa-play"></i> Start Typing
+      </button>
+      <span class="text-xs text-gray-600">Supports up to 20 000 characters &bull; Stats not saved in playground mode</span>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs' } });
+  require(['vs/editor/editor.main'], function () {
+    const initialValue = document.getElementById('code-hidden').value;
+    const langSelect   = document.getElementById('lang-select');
+
+    const pasteEditor = monaco.editor.create(document.getElementById('paste-editor'), {
+      value:     initialValue,
+      language:  langSelect.value,
+      theme:     'vs-dark',
+      fontSize:  13,
+      fontFamily: "'Fira Code', 'Cascadia Code', Consolas, monospace",
+      minimap:   { enabled: false },
+      lineNumbers: 'on',
+      scrollBeyondLastLine: false,
+      automaticLayout: true,
+      wordWrap: 'off',
+      tabSize: 4,
+    });
+
+    // Keep language in sync with selector
+    langSelect.addEventListener('change', () => {
+      monaco.editor.setModelLanguage(pasteEditor.getModel(), langSelect.value);
+    });
+
+    // Sync Monaco content to hidden textarea before form submit
+    document.getElementById('playground-form').addEventListener('submit', () => {
+      document.getElementById('code-hidden').value = pasteEditor.getValue();
+    });
+  });
+</script>
+{% endblock %}

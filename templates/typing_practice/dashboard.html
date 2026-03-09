@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – InstaCode{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.2/chart.umd.min.js"></script>
+<style>
+  .stat-card  { @apply bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-1; }
+  .section-hd { @apply text-xs uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2; }
+  .badge-easy   { @apply bg-green-900 text-green-300 text-xs px-2 py-0.5 rounded-full; }
+  .badge-medium { @apply bg-yellow-900 text-yellow-300 text-xs px-2 py-0.5 rounded-full; }
+  .badge-hard   { @apply bg-red-900   text-red-300   text-xs px-2 py-0.5 rounded-full; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-xl mx-auto px-4 py-6 space-y-8">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Page header
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold font-mono text-brand-400 flex items-center gap-2">
+        <i class="fa-solid fa-gauge-high"></i> Progress Dashboard
+      </h1>
+      <p class="text-gray-500 text-sm mt-1">Your typing performance at a glance</p>
+    </div>
+    <a href="{% url 'typing_practice:home' %}"
+       class="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-colors">
+      <i class="fa-solid fa-play"></i> Practice
+    </a>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Hero stats
+  ═══════════════════════════════════════════════════════════ -->
+  {% if overall.total_sessions %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-brand-400">{{ overall.total_sessions }}</div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Sessions</div>
+    </div>
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-yellow-400">
+        {% if overall.best_wpm %}{{ overall.best_wpm|floatformat:0 }}{% else %}–{% endif %}
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Best WPM</div>
+    </div>
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-yellow-300">
+        {% if overall.avg_wpm %}{{ overall.avg_wpm|floatformat:1 }}{% else %}–{% endif %}
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Avg WPM</div>
+    </div>
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-green-400">
+        {% if overall.avg_accuracy %}{{ overall.avg_accuracy|floatformat:1 }}%{% else %}–{% endif %}
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Avg Accuracy</div>
+    </div>
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-blue-400">
+        {% if overall.total_seconds %}
+          {% with h=overall.total_seconds|divisibleby:3600 %}
+          {{ overall.total_seconds|floatformat:0 }}s
+          {% endwith %}
+        {% else %}–{% endif %}
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Total Time (s)</div>
+    </div>
+
+    <div class="stat-card col-span-1">
+      <div class="text-3xl font-bold font-mono text-purple-400">
+        {{ practiced_count }}<span class="text-lg text-gray-600">/{{ total_snippets }}</span>
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500">Snippets Done</div>
+      <div class="mt-2 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div class="h-full bg-purple-500 rounded-full transition-all"
+             style="width: {% widthratio practiced_count total_snippets 100 %}%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WPM & Accuracy Trend
+  ═══════════════════════════════════════════════════════════ -->
+  {% if overall.total_sessions >= 2 %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div class="section-hd">
+      <i class="fa-solid fa-chart-line text-brand-500"></i> WPM & Accuracy Trend
+      <span class="text-gray-700">(last {{ overall.total_sessions|default:0 }} sessions, up to 50)</span>
+    </div>
+    <div class="h-64">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Category performance + Needs Improvement
+  ═══════════════════════════════════════════════════════════ -->
+  {% if cat_stats %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Horizontal bar chart -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div class="section-hd">
+        <i class="fa-solid fa-layer-group text-brand-500"></i> Avg WPM by Category
+      </div>
+      <div style="height: {{ cat_stats|length|add:1 }}rem; min-height:12rem; max-height:28rem;">
+        <canvas id="catChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Needs improvement list -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div class="section-hd">
+        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Needs Improvement
+        <span class="text-gray-700">(lowest avg WPM)</span>
+      </div>
+      <div class="space-y-3">
+        {% for cat in cat_stats|slice:":5" %}
+        {% with pct=cat.avg_wpm|floatformat:0 %}
+        <div>
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span class="text-gray-300 truncate max-w-[55%]">{{ cat.snippet__category__name }}</span>
+            <div class="flex items-center gap-3 text-xs text-gray-500">
+              <span class="{% if cat.avg_wpm < 20 %}text-red-400{% elif cat.avg_wpm < 35 %}text-amber-400{% else %}text-green-400{% endif %} font-mono font-bold text-sm">
+                {{ cat.avg_wpm|floatformat:1 }} WPM
+              </span>
+              <span>{{ cat.avg_acc|floatformat:0 }}% acc</span>
+              <span>{{ cat.sessions }} sess.</span>
+            </div>
+          </div>
+          <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all
+                        {% if cat.avg_wpm < 20 %}bg-red-600{% elif cat.avg_wpm < 35 %}bg-amber-500{% else %}bg-green-500{% endif %}"
+                 style="width: {% widthratio cat.avg_wpm 100 100 %}%; max-width:100%"></div>
+          </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Difficulty + Mode breakdown (side by side)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+    <!-- Difficulty breakdown -->
+    {% if diff_stats %}
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div class="section-hd">
+        <i class="fa-solid fa-signal text-brand-500"></i> By Difficulty
+      </div>
+      <div class="space-y-4">
+        {% for d in diff_stats %}
+        <div class="flex items-center gap-4">
+          <span class="w-16 text-xs font-semibold
+            {% if d.snippet__difficulty == 'Easy' %}text-green-400
+            {% elif d.snippet__difficulty == 'Medium' %}text-yellow-400
+            {% else %}text-red-400{% endif %}">
+            {{ d.snippet__difficulty }}
+          </span>
+          <div class="flex-1 space-y-0.5">
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+              <span class="font-mono text-white">{{ d.avg_wpm|floatformat:1 }} WPM</span>
+              <span>{{ d.avg_acc|floatformat:0 }}% · {{ d.sessions }} sess.</span>
+            </div>
+            <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div class="h-full rounded-full
+                {% if d.snippet__difficulty == 'Easy' %}bg-green-500
+                {% elif d.snippet__difficulty == 'Medium' %}bg-yellow-500
+                {% else %}bg-red-500{% endif %}"
+                   style="width: {% widthratio d.avg_wpm 100 100 %}%; max-width:100%"></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Mode comparison -->
+    {% if mode_stats %}
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div class="section-hd">
+        <i class="fa-solid fa-sliders text-brand-500"></i> Forced vs Natural Mode
+      </div>
+      <div class="space-y-4">
+        {% for m in mode_stats %}
+        <div class="bg-gray-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-semibold text-sm {% if m.typing_mode == 'forced' %}text-blue-400{% else %}text-orange-400{% endif %}">
+              <i class="fa-solid {% if m.typing_mode == 'forced' %}fa-lock{% else %}fa-feather{% endif %} mr-1"></i>
+              {{ m.typing_mode|capfirst }}
+            </span>
+            <span class="text-xs text-gray-500">{{ m.sessions }} sessions</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div>
+              <div class="text-2xl font-bold font-mono text-yellow-400">{{ m.avg_wpm|floatformat:1 }}</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mt-0.5">Avg WPM</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold font-mono text-green-400">{{ m.avg_acc|floatformat:1 }}%</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mt-0.5">Avg Accuracy</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Worst snippets (needs improvement table)
+  ═══════════════════════════════════════════════════════════ -->
+  {% if snippet_stats %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div class="section-hd">
+      <i class="fa-solid fa-fire-flame-curved text-red-500"></i> Top Snippets to Improve
+      <span class="text-gray-700">(lowest avg WPM, most practiced)</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs uppercase tracking-widest text-gray-600 border-b border-gray-800">
+            <th class="text-left py-2 pr-4 font-normal">Snippet</th>
+            <th class="text-left py-2 pr-4 font-normal">Category</th>
+            <th class="text-left py-2 pr-4 font-normal">Difficulty</th>
+            <th class="text-right py-2 pr-4 font-normal">Avg WPM</th>
+            <th class="text-right py-2 pr-4 font-normal">Best WPM</th>
+            <th class="text-right py-2 pr-4 font-normal">Accuracy</th>
+            <th class="text-right py-2 font-normal">Sessions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+          {% for s in snippet_stats %}
+          <tr class="hover:bg-gray-800/50 transition-colors group">
+            <td class="py-2.5 pr-4">
+              <a href="{% url 'typing_practice:practice' s.snippet__id %}"
+                 class="text-gray-200 group-hover:text-brand-400 transition-colors truncate max-w-[14rem] block">
+                {{ s.snippet__title }}
+              </a>
+            </td>
+            <td class="py-2.5 pr-4 text-gray-500 text-xs">{{ s.snippet__category__name }}</td>
+            <td class="py-2.5 pr-4">
+              <span class="badge-{% if s.snippet__difficulty == 'Easy' %}easy{% elif s.snippet__difficulty == 'Medium' %}medium{% else %}hard{% endif %}">
+                {{ s.snippet__difficulty }}
+              </span>
+            </td>
+            <td class="py-2.5 pr-4 text-right font-mono font-bold
+              {% if s.avg_wpm < 20 %}text-red-400{% elif s.avg_wpm < 35 %}text-amber-400{% else %}text-green-400{% endif %}">
+              {{ s.avg_wpm|floatformat:1 }}
+            </td>
+            <td class="py-2.5 pr-4 text-right font-mono text-yellow-400">{{ s.best_wpm|floatformat:0 }}</td>
+            <td class="py-2.5 pr-4 text-right font-mono text-green-400">{{ s.avg_acc|floatformat:1 }}%</td>
+            <td class="py-2.5 text-right text-gray-500">{{ s.sessions }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Recent sessions mini-table
+  ═══════════════════════════════════════════════════════════ -->
+  {% if recent %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div class="section-hd">
+      <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Recent Sessions
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs uppercase tracking-widest text-gray-600 border-b border-gray-800">
+            <th class="text-left py-2 pr-4 font-normal">Snippet</th>
+            <th class="text-left py-2 pr-4 font-normal">Category</th>
+            <th class="text-right py-2 pr-4 font-normal">WPM</th>
+            <th class="text-right py-2 pr-4 font-normal">Accuracy</th>
+            <th class="text-right py-2 pr-4 font-normal">Time</th>
+            <th class="text-left py-2 pr-4 font-normal">Mode</th>
+            <th class="text-right py-2 font-normal">Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+          {% for sess in recent %}
+          <tr class="hover:bg-gray-800/50 transition-colors group">
+            <td class="py-2.5 pr-4">
+              {% if sess.snippet %}
+              <a href="{% url 'typing_practice:practice' sess.snippet.id %}"
+                 class="text-gray-200 group-hover:text-brand-400 transition-colors truncate max-w-[14rem] block">
+                {{ sess.snippet.title }}
+              </a>
+              {% else %}<span class="text-gray-600 italic">deleted</span>{% endif %}
+            </td>
+            <td class="py-2.5 pr-4 text-gray-500 text-xs">
+              {{ sess.snippet.category.name|default:"–" }}
+            </td>
+            <td class="py-2.5 pr-4 text-right font-mono font-bold
+              {% if sess.wpm >= 60 %}text-green-400{% elif sess.wpm >= 35 %}text-yellow-400{% else %}text-red-400{% endif %}">
+              {{ sess.wpm|floatformat:0 }}
+            </td>
+            <td class="py-2.5 pr-4 text-right font-mono
+              {% if sess.accuracy >= 95 %}text-green-400{% elif sess.accuracy >= 80 %}text-yellow-400{% else %}text-red-400{% endif %}">
+              {{ sess.accuracy|floatformat:1 }}%
+            </td>
+            <td class="py-2.5 pr-4 text-right text-gray-400 font-mono">{{ sess.time_taken_seconds }}s</td>
+            <td class="py-2.5 pr-4">
+              <span class="text-xs px-2 py-0.5 rounded-full
+                {% if sess.typing_mode == 'forced' %}bg-blue-900 text-blue-300{% else %}bg-orange-900 text-orange-300{% endif %}">
+                {{ sess.typing_mode }}
+              </span>
+            </td>
+            <td class="py-2.5 text-right text-gray-600 text-xs font-mono">{{ sess.created_at|date:"M d H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-3 text-right">
+      <a href="{% url 'typing_practice:stats_history' %}"
+         class="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+        View full history <i class="fa-solid fa-arrow-right ml-1"></i>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- ── Empty state ── -->
+  <div class="flex flex-col items-center justify-center py-32 text-center">
+    <div class="text-6xl mb-4 opacity-30">📊</div>
+    <h2 class="text-xl font-bold text-gray-400 mb-2">No sessions yet</h2>
+    <p class="text-gray-600 mb-6">Complete a typing session to start tracking your progress.</p>
+    <a href="{% url 'typing_practice:home' %}"
+       class="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl transition-colors">
+      <i class="fa-solid fa-play mr-2"></i>Start Practicing
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if overall.total_sessions %}
+<script>
+(function () {
+  'use strict';
+
+  const TREND   = {{ trend_json|safe }};
+  const CATS    = {{ cat_stats_json|safe }};
+
+  // ── Shared Chart defaults ─────────────────────────────────────────────
+  Chart.defaults.color          = '#6b7280';
+  Chart.defaults.borderColor    = '#1f2937';
+  Chart.defaults.font.family    = '"Fira Code", monospace';
+
+  // ── 1. WPM / Accuracy Trend ───────────────────────────────────────────
+  const trendCtx = document.getElementById('trendChart');
+  if (trendCtx && TREND.length >= 2) {
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: TREND.map(s => s.date),
+        datasets: [
+          {
+            label:           'WPM',
+            data:            TREND.map(s => s.wpm),
+            borderColor:     '#facc15',
+            backgroundColor: 'rgba(250,204,21,0.08)',
+            fill:            true,
+            tension:         0.35,
+            pointRadius:     3,
+            pointHoverRadius:5,
+            yAxisID:         'y',
+          },
+          {
+            label:           'Accuracy %',
+            data:            TREND.map(s => s.acc),
+            borderColor:     '#34d8a1',
+            backgroundColor: 'rgba(52,216,161,0.05)',
+            fill:            false,
+            tension:         0.35,
+            pointRadius:     2,
+            pointHoverRadius:4,
+            yAxisID:         'y2',
+          },
+        ],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        interaction:         { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } },
+          tooltip: { callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + (ctx.datasetIndex === 1 ? '%' : ' WPM'),
+          }},
+        },
+        scales: {
+          x:  { ticks: { maxTicksLimit: 10, maxRotation: 30 }, grid: { color: '#111827' } },
+          y:  { position: 'left',  title: { display: true, text: 'WPM' },        suggestedMin: 0, grid: { color: '#111827' } },
+          y2: { position: 'right', title: { display: true, text: 'Accuracy %' }, suggestedMin: 0, max: 100, grid: { drawOnChartArea: false } },
+        },
+      },
+    });
+  }
+
+  // ── 2. Category horizontal bar chart ─────────────────────────────────
+  const catCtx = document.getElementById('catChart');
+  if (catCtx && CATS.length) {
+    // Colour: red → amber → green by WPM threshold
+    const barColors = CATS.map(c =>
+      c.avg_wpm < 20 ? 'rgba(239,68,68,0.75)'
+      : c.avg_wpm < 35 ? 'rgba(245,158,11,0.75)'
+      : 'rgba(52,216,161,0.75)'
+    );
+    new Chart(catCtx, {
+      type: 'bar',
+      data: {
+        labels:   CATS.map(c => c.name),
+        datasets: [{
+          label:           'Avg WPM',
+          data:            CATS.map(c => c.avg_wpm),
+          backgroundColor: barColors,
+          borderColor:     barColors.map(c => c.replace('0.75', '1')),
+          borderWidth:     1,
+          borderRadius:    4,
+        }],
+      },
+      options: {
+        indexAxis:           'y',
+        responsive:          true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: {
+            label: ctx => ` ${ctx.parsed.x.toFixed(1)} WPM  ·  ${CATS[ctx.dataIndex].sessions} sess.`,
+          }},
+        },
+        scales: {
+          x: { suggestedMin: 0, grid: { color: '#111827' }, ticks: { callback: v => v + ' WPM' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        },
+      },
+    });
+  }
+})();
+</script>
+{% endif %}
+{% endblock %}

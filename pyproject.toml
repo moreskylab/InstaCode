@@ -1,0 +1,11 @@
+[project]
+name = "instacode"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.0.3",
+    "dotenv>=0.9.9",
+    "python-dotenv>=1.2.2",
+    "whitenoise>=6.12.0",
+]

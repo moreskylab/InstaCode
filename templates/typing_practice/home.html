@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}InstaCode – Choose a Snippet{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-xl mx-auto px-6 py-10">
+
+  <!-- Hero -->
+  <div class="text-center mb-12">
+    <h1 class="text-4xl font-bold font-mono text-brand-400 mb-3">
+      <i class="fa-solid fa-keyboard mr-2"></i>Python DSA Typing Practice
+    </h1>
+    <p class="text-gray-400 text-lg max-w-xl mx-auto">
+      Master Python Data Structures &amp; Algorithms by typing real code.
+      Pick a snippet below and start practising.
+    </p>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="grid grid-cols-3 gap-4 mb-8 max-w-lg mx-auto">
+    <div class="bg-gray-900 rounded-xl p-4 text-center border border-gray-800">
+      <div class="text-2xl font-bold text-brand-400">{{ snippets.count }}</div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Snippets</div>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-4 text-center border border-gray-800">
+      <div class="text-2xl font-bold text-brand-400">{{ categories.count }}</div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Categories</div>
+    </div>
+    <div class="bg-gray-900 rounded-xl p-4 text-center border border-gray-800">
+      <div class="text-2xl font-bold text-brand-400">2</div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Modes</div>
+    </div>
+  </div>
+
+  <!-- Learning-path tier banner (from DSA Visual Guide) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
+    <div class="flex items-center gap-3 bg-gray-900 border border-green-900/50 rounded-xl px-4 py-3">
+      <span class="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
+      <div>
+        <p class="text-xs font-bold text-green-400 uppercase tracking-widest">Foundations</p>
+        <p class="text-xs text-gray-500">Big-O · Arrays · Linked Lists · Stacks &amp; Queues</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 bg-gray-900 border border-yellow-900/50 rounded-xl px-4 py-3">
+      <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shrink-0"></span>
+      <div>
+        <p class="text-xs font-bold text-yellow-400 uppercase tracking-widest">Intermediate</p>
+        <p class="text-xs text-gray-500">Hash Tables · Trees · Heaps · Tries · Sorting</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 bg-gray-900 border border-red-900/50 rounded-xl px-4 py-3">
+      <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+      <div>
+        <p class="text-xs font-bold text-red-400 uppercase tracking-widest">Advanced</p>
+        <p class="text-xs text-gray-500">Graphs · DP · Greedy · Backtracking · Patterns</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="flex flex-wrap items-center gap-3 mb-8">
+    <span class="text-sm text-gray-500 uppercase tracking-widest font-semibold">Filter:</span>
+    <button onclick="filterCategory('all')"
+            id="filter-all"
+            class="filter-btn active-filter px-4 py-1.5 rounded-full text-sm font-medium border border-brand-500 text-brand-400 bg-brand-900/20 hover:bg-brand-900/40 transition-colors">
+      All
+    </button>
+    {% for cat in categories %}
+    <button onclick="filterCategory('{{ cat.slug }}')"
+            id="filter-{{ cat.slug }}"
+            class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
+              {% if cat.tier == 'green' %}border-green-900 text-green-500 hover:border-green-500
+              {% elif cat.tier == 'yellow' %}border-yellow-900 text-yellow-500 hover:border-yellow-500
+              {% else %}border-gray-700 text-gray-400 hover:border-brand-500 hover:text-brand-400{% endif %}">
+      {{ cat.name }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- Snippet cards grid -->
+  <div id="snippet-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for snippet in snippets %}
+    <a href="{% url 'typing_practice:practice' snippet.id %}"
+       data-category="{{ snippet.category.slug }}"
+       class="snippet-card group flex flex-col bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-brand-500 hover:shadow-lg hover:shadow-brand-900/20 transition-all duration-200">
+
+      <!-- Header row -->
+      <div class="flex items-start justify-between mb-3">
+        <span class="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full
+          {% if snippet.category.tier == 'green' %}bg-green-900/40 text-green-300
+          {% elif snippet.category.tier == 'yellow' %}bg-yellow-900/40 text-yellow-300
+          {% else %}bg-gray-800 text-gray-300
+          {% endif %}">
+          {{ snippet.category.name }}
+        </span>
+
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full
+          {% if snippet.difficulty == 'Easy' %}bg-green-900/40 text-green-400
+          {% elif snippet.difficulty == 'Medium' %}bg-yellow-900/40 text-yellow-400
+          {% else %}bg-red-900/40 text-red-400{% endif %}">
+          {{ snippet.difficulty }}
+        </span>
+      </div>
+
+      <!-- Title -->
+      <h3 class="font-semibold text-gray-100 group-hover:text-brand-400 transition-colors mb-2">
+        {{ snippet.title }}
+      </h3>
+
+      <!-- Code preview -->
+      <pre class="font-mono text-xs text-gray-500 bg-gray-950 rounded-lg p-3 overflow-hidden max-h-24 leading-relaxed flex-1">{{ snippet.code_content|truncatechars:160 }}</pre>
+
+      <!-- CTA -->
+      <div class="mt-4 flex items-center justify-between text-xs text-gray-600">
+        <span>{{ snippet.code_content|length }} chars</span>
+        <span class="text-brand-500 group-hover:text-brand-400 font-medium transition-colors">
+          Start typing <i class="fa-solid fa-arrow-right ml-1"></i>
+        </span>
+      </div>
+    </a>
+    {% empty %}
+    <p class="col-span-3 text-center text-gray-500 py-20">
+      No snippets found. Run <code class="font-mono bg-gray-800 px-2 py-0.5 rounded">python manage.py seed_snippets</code> to add some.
+    </p>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function filterCategory(slug) {
+    // Update button styles
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active-filter', 'border-brand-500', 'text-brand-400', 'bg-brand-900/20');
+      btn.classList.add('border-gray-700', 'text-gray-400');
+    });
+    const active = document.getElementById('filter-' + slug);
+    if (active) {
+      active.classList.add('active-filter', 'border-brand-500', 'text-brand-400', 'bg-brand-900/20');
+      active.classList.remove('border-gray-700', 'text-gray-400');
+    }
+
+    // Show/hide cards
+    document.querySelectorAll('.snippet-card').forEach(card => {
+      const show = slug === 'all' || card.dataset.category === slug;
+      card.style.display = show ? '' : 'none';
+    });
+  }
+</script>
+{% endblock %}

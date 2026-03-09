@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}InstaCode – Python Typing Practice{% endblock %}</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Fira Code"', '"Cascadia Code"', 'Consolas', '"Courier New"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50:  '#f0fdf9',
+              100: '#ccfbef',
+              400: '#34d8a1',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+            },
+            rose: {
+              300: '#fda4af',
+              400: '#fb7185',
+              700: '#be123c',
+              900: '#881337',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Fira Code font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* Smooth scrollbar for dark backgrounds */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e1e2e; }
+    ::-webkit-scrollbar-thumb { background: #3f3f5a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-gray-950 text-gray-100 flex flex-col">
+
+  <!-- ── Navigation ──────────────────────────────────────────────────── -->
+  <nav class="flex-none bg-gray-900 border-b border-gray-800 px-6 py-3">
+    <div class="max-w-screen-xl mx-auto flex items-center justify-between">
+      <!-- Logo -->
+      <a href="{% url 'typing_practice:home' %}" class="flex items-center gap-2 text-brand-400 font-bold text-xl tracking-tight hover:text-brand-300 transition-colors">
+        <i class="fa-solid fa-bolt-lightning"></i>
+        <span class="font-mono">InstaCode</span>
+      </a>
+
+      <!-- Nav links -->
+      <div class="flex items-center gap-6 text-sm text-gray-400">
+        <a href="{% url 'typing_practice:home' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-house mr-1"></i>Home
+        </a>
+        <a href="{% url 'typing_practice:dashboard' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-gauge-high mr-1"></i>Dashboard
+        </a>
+        <a href="{% url 'typing_practice:stats_history' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-chart-line mr-1"></i>History
+        </a>
+        <a href="{% url 'typing_practice:tracks' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-layer-group mr-1"></i>Tracks
+        </a>
+        <a href="{% url 'typing_practice:resources' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-book-open mr-1"></i>Resources
+        </a>
+        <a href="{% url 'typing_practice:playground' %}" class="hover:text-brand-400 transition-colors">
+          <i class="fa-solid fa-flask mr-1"></i>Playground
+        </a>
+        <a href="{% url 'typing_practice:interview' %}" class="hover:text-rose-400 transition-colors">
+          <i class="fa-solid fa-user-tie mr-1"></i>Interview
+        </a>
+        <a href="{% url 'typing_practice:dsa_interview' %}" class="hover:text-amber-400 transition-colors">
+          <i class="fa-solid fa-diagram-project mr-1"></i>DSA
+        </a>
+        {% if user.is_staff %}
+        <a href="{% url 'typing_practice:manage_snippet' %}" class="hover:text-yellow-400 transition-colors">
+          <i class="fa-solid fa-circle-plus mr-1"></i>Add Snippet
+        </a>
+        <a href="{% url 'typing_practice:user_list' %}" class="hover:text-purple-400 transition-colors">
+          <i class="fa-solid fa-users-gear mr-1"></i>Users
+        </a>
+        {% endif %}
+        <!-- User info + logout -->
+        <div class="flex items-center gap-3 ml-2 pl-4 border-l border-gray-700">
+          <span class="text-gray-500 text-xs"><i class="fa-solid fa-user mr-1"></i>{{ user.username }}</span>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1">
+              <i class="fa-solid fa-right-from-bracket"></i>Logout
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────────────── -->
+  <main class="flex-1 overflow-y-auto">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────── -->
+  <footer class="flex-none bg-gray-900 border-t border-gray-800 text-center text-xs text-gray-600 py-3">
+    InstaCode &mdash; Python DSA Typing Practice &bull; Built with Django &amp; Monaco Editor
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

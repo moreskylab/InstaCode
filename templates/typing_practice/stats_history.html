@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Stats History – InstaCode{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-xl mx-auto px-6 py-10">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold font-mono text-brand-400 mb-1">
+        <i class="fa-solid fa-chart-line mr-2"></i>Session History
+      </h1>
+      <p class="text-gray-500 text-sm">Your last {{ sessions|length }} typing session{{ sessions|length|pluralize }}.</p>
+    </div>
+    <a href="{% url 'typing_practice:home' %}"
+       class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-sm transition-colors border border-gray-700">
+      <i class="fa-solid fa-arrow-left mr-1"></i>Back to snippets
+    </a>
+  </div>
+
+  {% if sessions %}
+
+  <!-- Summary cards -->
+  {% with sessions as s %}
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+
+    <!-- Best WPM -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+      <div class="text-2xl font-bold font-mono text-yellow-400">
+        {{ s|dictsortreversed:"wpm"|first|default:sessions.0 }}
+        <!-- compute in template tag is limited; use JS below -->
+        <span id="best-wpm">–</span>
+      </div>
+      <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Best WPM</div>
+    </div>
+
+    <!-- Best Accuracy -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+      <span id="best-acc" class="text-2xl font-bold font-mono text-green-400">–</span>
+      <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Best Accuracy</div>
+    </div>
+
+    <!-- Average WPM -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+      <span id="avg-wpm" class="text-2xl font-bold font-mono text-brand-400">–</span>
+      <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Avg WPM</div>
+    </div>
+
+    <!-- Total sessions -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+      <div class="text-2xl font-bold font-mono text-purple-400">{{ sessions|length }}</div>
+      <div class="text-xs uppercase tracking-widest text-gray-500 mt-1">Sessions</div>
+    </div>
+
+  </div>
+  {% endwith %}
+
+  <!-- Table -->
+  <div class="overflow-x-auto rounded-xl border border-gray-800">
+    <table class="w-full text-sm text-left">
+      <thead class="text-xs uppercase tracking-widest text-gray-500 bg-gray-900 border-b border-gray-800">
+        <tr>
+          <th class="px-5 py-3">#</th>
+          <th class="px-5 py-3">Snippet</th>
+          <th class="px-5 py-3">Category</th>
+          <th class="px-5 py-3">Difficulty</th>
+          <th class="px-5 py-3 text-yellow-500">WPM</th>
+          <th class="px-5 py-3 text-green-500">Accuracy</th>
+          <th class="px-5 py-3">Time (s)</th>
+          <th class="px-5 py-3">Mode</th>
+          <th class="px-5 py-3">Date</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800" id="sessions-body">
+        {% for session in sessions %}
+        <tr class="bg-gray-950 hover:bg-gray-900 transition-colors"
+            data-wpm="{{ session.wpm }}" data-acc="{{ session.accuracy }}">
+          <td class="px-5 py-3 text-gray-600 font-mono text-xs">{{ forloop.counter }}</td>
+
+          <td class="px-5 py-3 font-medium text-gray-200">
+            {% if session.snippet %}
+              <a href="{% url 'typing_practice:practice' session.snippet.id %}"
+                 class="hover:text-brand-400 transition-colors">
+                {{ session.snippet.title }}
+              </a>
+            {% else %}
+              <span class="text-gray-600 italic">deleted</span>
+            {% endif %}
+          </td>
+
+          <td class="px-5 py-3 text-gray-400">
+            {{ session.snippet.category.name|default:"–" }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if session.snippet %}
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                {% if session.snippet.difficulty == 'Easy' %}bg-green-900/40 text-green-400
+                {% elif session.snippet.difficulty == 'Medium' %}bg-yellow-900/40 text-yellow-400
+                {% else %}bg-red-900/40 text-red-400{% endif %}">
+                {{ session.snippet.difficulty }}
+              </span>
+            {% else %}–{% endif %}
+          </td>
+
+          <td class="px-5 py-3 font-bold font-mono text-yellow-400">{{ session.wpm|floatformat:1 }}</td>
+
+          <td class="px-5 py-3 font-mono
+            {% if session.accuracy >= 95 %}text-green-400
+            {% elif session.accuracy >= 80 %}text-yellow-400
+            {% else %}text-red-400{% endif %}">
+            {{ session.accuracy|floatformat:1 }}%
+          </td>
+
+          <td class="px-5 py-3 font-mono text-gray-400">{{ session.time_taken_seconds }}s</td>
+
+          <td class="px-5 py-3">
+            <span class="text-xs px-2 py-0.5 rounded-full
+              {% if session.typing_mode == 'forced' %}bg-blue-900/40 text-blue-300
+              {% else %}bg-purple-900/40 text-purple-300{% endif %}">
+              {{ session.typing_mode }}
+            </span>
+          </td>
+
+          <td class="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
+            {{ session.created_at|date:"M j, Y H:i" }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if session.snippet %}
+            <a href="{% url 'typing_practice:practice' session.snippet.id %}"
+               class="text-brand-500 hover:text-brand-400 text-xs">
+              Retry <i class="fa-solid fa-arrow-right ml-0.5"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="text-center py-24 text-gray-600">
+    <i class="fa-solid fa-chart-line text-5xl mb-4 block opacity-30"></i>
+    <p class="text-lg">No sessions recorded yet.</p>
+    <a href="{% url 'typing_practice:home' %}" class="mt-4 inline-block text-brand-400 hover:underline">
+      Start practising →
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if sessions %}
+<script>
+  // Compute summary stats from table rows (avoids complex Django template math)
+  (function () {
+    const rows   = Array.from(document.querySelectorAll('#sessions-body tr'));
+    const wpms   = rows.map(r => parseFloat(r.dataset.wpm));
+    const accs   = rows.map(r => parseFloat(r.dataset.acc));
+    const bestWpm  = Math.max(...wpms);
+    const bestAcc  = Math.max(...accs);
+    const avgWpm   = (wpms.reduce((a, b) => a + b, 0) / wpms.length);
+
+    document.getElementById('best-wpm').textContent = bestWpm.toFixed(1);
+    document.getElementById('best-acc').textContent = bestAcc.toFixed(1) + '%';
+    document.getElementById('avg-wpm').textContent  = avgWpm.toFixed(1);
+
+    // Highlight the best WPM row in gold
+    const bestRow = rows[wpms.indexOf(bestWpm)];
+    if (bestRow) {
+      bestRow.classList.add('ring-1', 'ring-yellow-600/40');
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}
