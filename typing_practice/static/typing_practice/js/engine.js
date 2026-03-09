@@ -157,6 +157,7 @@
         acceptSuggestionOnEnter:    'off',
         tabCompletion:              'off',
         wordBasedSuggestions:       'off',
+        automaticLayout:            true,
         scrollbar: { useShadows: false, verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
       }
     );
