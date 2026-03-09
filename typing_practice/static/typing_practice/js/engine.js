@@ -52,6 +52,17 @@
         font-style: normal !important;
         opacity: .85;
       }
+      /* Tab hint ⇥ injected before pending indentation */
+      .monaco-editor .ic-cursor-tab {
+        color: #10b981 !important;
+        font-style: normal !important;
+        opacity: .9;
+      }
+      /* Pending indentation block — waiting for Tab key */
+      .monaco-editor .ic-tab-pending {
+        background: rgba(16, 185, 129, 0.07) !important;
+        border-bottom: 1px dashed #1a5c44 !important;
+      }
     `;
     document.head.appendChild(s);
   })();
@@ -68,6 +79,7 @@
   let isRunning     = false;
   let timerInterval = null;
   let autoScroll    = true; // whether editor follows the cursor
+  let indentEnd     = -1;   // index past pending line-start whitespace; user must press Tab
 
   // Sets of character indices
   const errorSet    = new Set();  // positions with uncorrected errors (natural)
@@ -236,7 +248,19 @@
 
     // 4. Cursor — show what the user must press next
     if (currentIndex < code.length) {
-      if (code[currentIndex] === '\n') {
+      if (indentEnd > currentIndex) {
+        // Pending line-start indentation: dim the whole block + inject ⇥ hint
+        const startPos = model.getPositionAt(currentIndex);
+        const endPos   = model.getPositionAt(indentEnd);
+        decors.push({
+          range:   new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+          options: { inlineClassName: 'ic-tab-pending' },
+        });
+        decors.push({
+          range:   new monaco.Range(startPos.lineNumber, startPos.column, startPos.lineNumber, startPos.column),
+          options: { before: { content: '⇥ ', inlineClassName: 'ic-cursor-tab' } },
+        });
+      } else if (code[currentIndex] === '\n') {
         // Inject a visible ↵ glyph at end of the current line
         const pos = model.getPositionAt(currentIndex);
         decors.push({
@@ -327,6 +351,9 @@
     if (e.key === 'Backspace') {
       if (mode !== 'natural' || currentIndex <= 0) return;
 
+      // If waiting for Tab, just cancel the pending state and step back past the newline
+      if (indentEnd > currentIndex) indentEnd = -1;
+
       // Step back one real typed position, un-skip any auto-indented chars
       currentIndex--;
       while (currentIndex > 0 && autoSkipSet.has(currentIndex)) {
@@ -342,6 +369,31 @@
       applyDecorations();
       updateMetrics();
       _highlightKey(currentChar());
+      return;
+    }
+
+    // ─── Tab: accept pending line-start indentation ─────────────────────
+    if (e.key === 'Tab' && indentEnd > currentIndex) {
+      if (!isRunning) startTimer();
+      totalKS++;
+      for (let i = currentIndex; i < indentEnd; i++) { autoSkipSet.add(i); }
+      currentIndex = indentEnd;
+      indentEnd = -1;
+      skipNonTypeable();
+      if (currentIndex >= code.length) {
+        applyDecorations();
+        finishSession();
+      } else {
+        applyDecorations();
+        updateMetrics();
+        _highlightKey(currentChar());
+      }
+      return;
+    }
+
+    // ─── Any other key while indentation is pending → must press Tab ──────
+    if (indentEnd > currentIndex) {
+      flashError();
       return;
     }
 
@@ -371,15 +423,11 @@
       errorSet.delete(currentIndex);
       currentIndex++;
 
-      // Auto-indent: after Enter, skip leading whitespace automatically
+      // After Enter, mark any leading whitespace as pending — user must press Tab
       if (typed === '\n') {
-        while (
-          currentIndex < code.length &&
-          (code[currentIndex] === ' ' || code[currentIndex] === '\t')
-        ) {
-          autoSkipSet.add(currentIndex);
-          currentIndex++;
-        }
+        let ws = currentIndex;
+        while (ws < code.length && (code[ws] === ' ' || code[ws] === '\t')) { ws++; }
+        if (ws > currentIndex) indentEnd = ws;
       }
 
       skipNonTypeable();
@@ -390,7 +438,7 @@
       } else {
         applyDecorations();
         updateMetrics();
-        _highlightKey(currentChar());
+        _highlightKey(indentEnd > currentIndex ? '\t' : currentChar());
       }
 
     } else {
@@ -491,6 +539,7 @@
 
     errorSet.clear();
     autoSkipSet.clear();
+    indentEnd = -1;
     skipNonTypeable();
 
     elTimer.textContent = '0:00';
