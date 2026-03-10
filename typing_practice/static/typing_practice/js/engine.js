@@ -346,6 +346,9 @@
     // Escape → exit zen mode (works even while typing is paused / in view mode)
     if (e.key === 'Escape' && zenMode) { e.preventDefault(); toggleZenMode(); return; }
 
+    // F11 → toggle zen mode
+    if (e.key === 'F11') { e.preventDefault(); toggleZenMode(); return; }
+
     // View mode — user is browsing the code with syntax highlighting; typing suspended
     if (viewMode) return;
 
