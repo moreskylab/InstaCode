@@ -112,8 +112,13 @@
   const flashEl  = document.getElementById('flash-overlay');
   const modal    = document.getElementById('results-modal');
   const retryBtn = document.getElementById('modal-retry-btn');
-  const viewModeBtn = document.getElementById('view-mode-btn');
-  const zenBtn      = document.getElementById('zen-btn');
+  const viewModeBtn  = document.getElementById('view-mode-btn');
+  const zenBtn        = document.getElementById('zen-btn');
+  const fontIncBtn    = document.getElementById('font-inc-btn');
+  const fontDecBtn    = document.getElementById('font-dec-btn');
+  const fontSizeLabel = document.getElementById('font-size-label');
+  const FONT_MIN = 10, FONT_MAX = 28, FONT_STEP = 1;
+  let   fontSize = 14;
 
   // ── 5. Monaco initialisation ────────────────────────────────────────────
   require(['vs/editor/editor.main'], function () {
@@ -627,5 +632,25 @@
 
   viewModeBtn && viewModeBtn.addEventListener('click', toggleViewMode);
   zenBtn      && zenBtn.addEventListener('click', toggleZenMode);
+
+  // ── 15. Font size controls ───────────────────────────────────────────
+  function applyFontSize(size) {
+    fontSize = Math.min(FONT_MAX, Math.max(FONT_MIN, size));
+    if (editor) editor.updateOptions({ fontSize });
+    if (fontSizeLabel) fontSizeLabel.textContent = fontSize + 'px';
+    // Dim buttons at limits
+    if (fontDecBtn) fontDecBtn.style.opacity = fontSize <= FONT_MIN ? '0.3' : '';
+    if (fontIncBtn) fontIncBtn.style.opacity = fontSize >= FONT_MAX ? '0.3' : '';
+  }
+
+  fontIncBtn && fontIncBtn.addEventListener('click', () => applyFontSize(fontSize + FONT_STEP));
+  fontDecBtn && fontDecBtn.addEventListener('click', () => applyFontSize(fontSize - FONT_STEP));
+
+  // Ctrl++ / Ctrl+- keyboard shortcuts for font size
+  document.addEventListener('keydown', function (e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    if (e.key === '=' || e.key === '+') { e.preventDefault(); applyFontSize(fontSize + FONT_STEP); }
+    else if (e.key === '-' || e.key === '_') { e.preventDefault(); applyFontSize(fontSize - FONT_STEP); }
+  });
 
 })();
