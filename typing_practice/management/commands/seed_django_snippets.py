@@ -23,11 +23,7 @@ from typing_practice.models import Category, CodeSnippet
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-DEFAULT_QMD_PATH = (
-    Path(__file__).resolve().parents[5]
-    / "Videos" / "PYTHON" / "DSA" / "YT" / "02_linkedlist" / "slideshow"
-    / "django.qmd"
-)
+DEFAULT_QMD_PATH = Path(__file__).resolve().parents[3] / "django.qmd"
 
 _SLIDE_TITLE = re.compile(r'^##\s+(.+?)(?:\s*\{[^}]*\})?\s*$', re.MULTILINE)
 _CODE_BLOCK  = re.compile(r'```python\n(.*?)```', re.DOTALL)
@@ -143,9 +139,9 @@ class Command(BaseCommand):
 
         cat_cache: dict[str, Category] = {}
         for meta in CATEGORIES:
-            cat_obj, _ = Category.objects.get_or_create(
+            cat_obj, _ = Category.objects.update_or_create(
                 name=meta["name"],
-                defaults={"description": meta["description"]},
+                defaults={"slug": meta["slug"], "description": meta["description"]},
             )
             cat_cache[meta["name"]] = cat_obj
 
