@@ -76,6 +76,36 @@
     align-items: center; justify-content: center;
   }
   #results-modal.open { display: flex; }
+
+  /* ── Zen Mode ───────────────────────────────────────────────────── */
+  body.zen-mode nav { display: none !important; }
+  body.zen-mode #control-bar { display: none !important; }
+  body.zen-mode #virtual-keyboard { display: none !important; }
+  body.zen-mode #main-layout {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 0 !important;
+  }
+  #zen-hint {
+    display: none;
+    position: fixed; bottom: 1.25rem; right: 1.25rem;
+    background: rgba(15,15,30,0.85); backdrop-filter: blur(6px);
+    border: 1px solid #3a3a5c; border-radius: 9999px;
+    padding: 0.35rem 1rem; font-size: 0.75rem; color: #7070a0;
+    z-index: 200; pointer-events: none;
+  }
+  body.zen-mode #zen-hint { display: block; }
+  #zen-hint kbd {
+    background: #2a2a4a; border: 1px solid #4a4a6a;
+    border-radius: 4px; padding: 0.1rem 0.35rem; font-size: 0.7rem;
+    font-family: 'Fira Code', monospace; color: #9090c0;
+  }
+  /* View-mode button active state */
+  #view-mode-btn.active {
+    background: #1e3a5f !important;
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
+  }
 </style>
 {% endblock %}
 
@@ -87,10 +117,10 @@
      data-stats-url="{% url 'typing_practice:stats_api' %}"
      class="hidden"></div>
 
-<div class="flex flex-col h-[calc(100vh-7.5rem)] px-4 py-4 gap-3 max-w-screen-2xl mx-auto">
+<div id="main-layout" class="flex flex-col h-[calc(100vh-7.5rem)] px-4 py-4 gap-3 max-w-screen-2xl mx-auto">
 
   <!-- ── Top control bar ──────────────────────────────────────────── -->
-  <div class="flex flex-wrap items-center gap-3 bg-gray-900 rounded-xl px-5 py-3 border border-gray-800">
+  <div id="control-bar" class="flex flex-wrap items-center gap-3 bg-gray-900 rounded-xl px-5 py-3 border border-gray-800">
 
     <!-- Snippet selector -->
     <div class="flex items-center gap-2 text-sm">
@@ -160,6 +190,19 @@
       <span id="scroll-toggle-label" class="text-xs">Follow</span>
     </button>
 
+    <!-- View-mode toggle -->
+    <button id="view-mode-btn" title="Toggle syntax highlighting view (disables typing)"
+            class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg text-sm transition-colors">
+      <i class="fa-solid fa-eye"></i>
+      <span class="text-xs">View</span>
+    </button>
+
+    <!-- Zen mode toggle -->
+    <button id="zen-btn" title="Toggle zen (fullscreen) mode  •  Esc to exit"
+            class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg text-sm transition-colors">
+      <i class="fa-solid fa-expand"></i>
+    </button>
+
     <!-- Reset -->
     <button id="reset-btn"
             class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-sm transition-colors">
@@ -180,6 +223,9 @@
   </div>
 
 </div>
+
+<!-- ── Zen Mode hint ─────────────────────────────────────────────────── -->
+<div id="zen-hint">Press <kbd>Esc</kbd> to exit Zen Mode</div>
 
 <!-- ── Post-game Results Modal ───────────────────────────────────────── -->
 <div id="results-modal">

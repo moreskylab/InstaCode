@@ -80,6 +80,8 @@
   let timerInterval = null;
   let autoScroll    = true; // whether editor follows the cursor
   let indentEnd     = -1;   // index past pending line-start whitespace; user must press Tab
+  let viewMode      = false; // syntax-highlight viewing mode (typing suspended)
+  let zenMode       = false; // fullscreen zen mode (nav/controls hidden)
 
   // Sets of character indices
   const errorSet    = new Set();  // positions with uncorrected errors (natural)
@@ -110,6 +112,8 @@
   const flashEl  = document.getElementById('flash-overlay');
   const modal    = document.getElementById('results-modal');
   const retryBtn = document.getElementById('modal-retry-btn');
+  const viewModeBtn = document.getElementById('view-mode-btn');
+  const zenBtn      = document.getElementById('zen-btn');
 
   // ── 5. Monaco initialisation ────────────────────────────────────────────
   require(['vs/editor/editor.main'], function () {
@@ -333,6 +337,12 @@
     const tag = el?.tagName;
     const isMonacoInput = el?.classList.contains('inputarea');
     if (tag === 'SELECT' || tag === 'INPUT' || (tag === 'TEXTAREA' && !isMonacoInput)) return;
+
+    // Escape → exit zen mode (works even while typing is paused / in view mode)
+    if (e.key === 'Escape' && zenMode) { e.preventDefault(); toggleZenMode(); return; }
+
+    // View mode — user is browsing the code with syntax highlighting; typing suspended
+    if (viewMode) return;
 
     // Only act on printable chars and our action keys
     const isAltGr     = e.ctrlKey && e.altKey;   // Windows AltGr fires ctrlKey+altKey
@@ -579,5 +589,43 @@
       scrollLabel.textContent = 'Free';
     }
   });
+
+  // ── 14. View Mode & Zen Mode ─────────────────────────────────────────────
+  function toggleViewMode() {
+    if (!editor || typeof monaco === 'undefined') return;
+    viewMode = !viewMode;
+    if (viewMode) {
+      // Show full syntax-highlighted code so the user can read/study it
+      monaco.editor.setTheme('vs-dark');
+      decorCollection.set([]);
+      viewModeBtn.innerHTML = '<i class="fa-solid fa-keyboard"></i><span class="text-xs">Type</span>';
+      viewModeBtn.classList.add('active');
+      viewModeBtn.title = 'Exit code view — return to typing';
+    } else {
+      // Restore ghost-text typing theme and decorations
+      monaco.editor.setTheme('ic-dark');
+      applyDecorations();
+      viewModeBtn.innerHTML = '<i class="fa-solid fa-eye"></i><span class="text-xs">View</span>';
+      viewModeBtn.classList.remove('active');
+      viewModeBtn.title = 'Toggle syntax highlighting view (disables typing)';
+    }
+  }
+
+  function toggleZenMode() {
+    zenMode = !zenMode;
+    document.body.classList.toggle('zen-mode', zenMode);
+    if (zenMode) {
+      zenBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+      zenBtn.title = 'Exit zen mode  •  Esc';
+    } else {
+      zenBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+      zenBtn.title = 'Toggle zen (fullscreen) mode  •  Esc to exit';
+    }
+    // Allow the browser to apply layout changes before Monaco remeasures
+    setTimeout(() => { if (editor) editor.layout(); }, 50);
+  }
+
+  viewModeBtn && viewModeBtn.addEventListener('click', toggleViewMode);
+  zenBtn      && zenBtn.addEventListener('click', toggleZenMode);
 
 })();
